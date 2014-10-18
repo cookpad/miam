@@ -1,5 +1,8 @@
-require 'miam/version'
+require 'cgi'
+require 'json'
 
-module Miam
-  # Your code goes here...
-end
+require 'aws-sdk-core'
+
+module Miam; end
+require 'miam/exporter'
+require 'miam/version'
