@@ -10,9 +10,8 @@ class Miam::DSL::Context
   def initialize(path, options = {}, &block)
     @path = path
     @options = options
-    @result = {}
-    # XXX:
-    #instance_eval(&block)
+    @result = {:users => {}, :groups => {}}
+    instance_eval(&block)
   end
 
   private
@@ -29,5 +28,25 @@ class Miam::DSL::Context
     end
   end
 
-  # XXX:
+  def user(name, user_options = {}, &block)
+    name = name.to_s
+
+    if @result[:users][name]
+      raise "User `#{name}` is already defined"
+    end
+
+    attrs = Miam::DSL::Context::User.new(name, &block).result
+    @result[:users][name] = user_options.merge(attrs)
+  end
+
+  def group(name, group_options = {}, &block)
+    name = name.to_s
+
+    if @result[:groups][name]
+      raise "Group `#{name}` is already defined"
+    end
+
+    attrs = Miam::DSL::Context::Group.new(name, &block).result
+    @result[:groups][name] = group_options.merge(attrs)
+  end
 end

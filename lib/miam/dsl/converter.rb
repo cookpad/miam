@@ -27,7 +27,7 @@ class Miam::DSL::Converter
     user_options = {:path => attrs[:path]}
 
     <<-EOS
-user #{user_name.inspect} #{unbrace(user_options.inspect)} do
+user #{user_name.inspect}, #{unbrace(user_options.inspect)} do
   #{output_login_profile(attrs[:login_profile])}
 
   #{output_user_groups(attrs[:groups])}
@@ -66,7 +66,7 @@ end
     group_options = {:path => attrs[:path]}
 
     <<-EOS
-group #{group_name.inspect} #{unbrace(group_options.inspect)} do
+group #{group_name.inspect}, #{unbrace(group_options.inspect)} do
   #{output_policies(attrs[:policies])}
 end
     EOS

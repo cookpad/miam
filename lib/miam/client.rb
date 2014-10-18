@@ -12,10 +12,26 @@ class Miam::Client
   end
 
   def apply(file)
-    # XXX:
+    walk(file)
   end
 
   private
 
-  # XXX:
+  def walk(file)
+    expected = load_file(file)
+    #actual = Miam::Exporter.export(@iam, @options)
+    # XXX:
+  end
+
+  def load_file(file)
+    if file.kind_of?(String)
+      open(file) do |f|
+        Miam::DSL.parse(f.read, file)
+      end
+    elsif file.respond_to?(:read)
+      Miam::DSL.parse(file.read, file.path)
+    else
+      raise TypeError, "can't convert #{file} into File"
+    end
+  end
 end
