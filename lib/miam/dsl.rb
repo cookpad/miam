@@ -4,6 +4,6 @@ class Miam::DSL
   end
 
   def self.parse(dsl, path, options = {})
-    # XXX:
+    Miam::DSL::Context.eval(dsl, path, options).result
   end
 end

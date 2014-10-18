@@ -6,6 +6,7 @@ require 'aws-sdk-core'
 
 module Miam; end
 require 'miam/dsl'
+require 'miam/dsl/context'
 require 'miam/dsl/converter'
 require 'miam/exporter'
 require 'miam/version'
