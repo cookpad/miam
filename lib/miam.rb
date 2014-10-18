@@ -5,6 +5,8 @@ require 'pp'
 require 'aws-sdk-core'
 
 module Miam; end
+require 'miam/client'
+require 'miam/driver'
 require 'miam/dsl'
 require 'miam/dsl/context'
 require 'miam/dsl/converter'
