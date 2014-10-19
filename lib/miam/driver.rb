@@ -22,6 +22,22 @@ class Miam::Driver
     new_user_attrs
   end
 
+  def create_access_key(user_name)
+    log(:info, "Create access key for User `#{user_name}`", :color => :cyan)
+    access_key = nil
+
+    unless_dry_run do
+      resp = @iam.create_access_key(:user_name => user_name)
+
+      access_key = {
+        :access_key_id => resp.access_key.access_key_id,
+        :secret_access_key => resp.access_key.secret_access_key,
+      }
+    end
+
+    access_key
+  end
+
   def delete_user(user_name, attrs)
     log(:info, "Delete User `#{user_name}`", :color => :red)
 
