@@ -4,6 +4,7 @@ class Miam::Client
     aws_config = options.delete(:aws_config) || {}
     @iam = Aws::IAM::Client.new(aws_config)
     @driver = Miam::Driver.new(@iam, options)
+    @password_manager = options[:password_manager] || Miam::PasswordManager.new('-', options)
   end
 
   def export
@@ -62,13 +63,21 @@ class Miam::Client
   def walk_login_profile(user_name, expected_login_profile, actual_login_profile)
     updated = false
 
-    if expected_login_profile != actual_login_profile
-      if expected_login_profile
-        # XXX: create login_profile
-      else
-        # XXX: delete login_profile
+    [expected_login_profile, actual_login_profile].each do |login_profile|
+      if login_profile and not login_profile.has_key?(:password_reset_required)
+        login_profile[:password_reset_required] = false
       end
+    end
 
+    if expected_login_profile and not actual_login_profile
+      expected_login_profile[:password] ||= @password_manager.identify(user_name, :login_profile)
+      @driver.create_login_profile(user_name, expected_login_profile)
+      updated = true
+    elsif not expected_login_profile and actual_login_profile
+      @driver.delete_login_profile(user_name)
+      updated = true
+    elsif expected_login_profile != actual_login_profile
+      @driver.update_login_profile(user_name, expected_login_profile)
       updated = true
     end
 

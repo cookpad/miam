@@ -8,6 +8,39 @@ class Miam::Driver
     @options = options
   end
 
+  def create_login_profile(user_name, attrs)
+    log_attrs = attrs.dup
+    log_attrs.delete(:password)
+
+    log(:info, "Update User `#{user_name}`", :color => :green)
+    log(:info, "  create login profile: #{log_attrs.inspect}", :color => :green)
+
+    unless_dry_run do
+      @iam.create_login_profile(attrs.merge(:user_name => user_name))
+    end
+  end
+
+  def delete_login_profile(user_name)
+    log(:info, "Update User `#{user_name}`", :color => :green)
+    log(:info, "  delete login profile", :color => :green)
+
+    unless_dry_run do
+      @iam.delete_login_profile(:user_name => user_name)
+    end
+  end
+
+  def update_login_profile(user_name, attrs)
+    log_attrs = attrs.dup
+    log_attrs.delete(:password)
+
+    log(:info, "Update User `#{user_name}`", :color => :green)
+    log(:info, "  update login profile: #{log_attrs.inspect}", :color => :green)
+
+    unless_dry_run do
+      @iam.update_login_profile(attrs.merge(:user_name => user_name))
+    end
+  end
+
   def add_user_to_groups(user_name, group_names)
     log(:info, "Update User `#{user_name}`", :color => :green)
     log(:info, "  add groups=#{group_names.join(',')}", :color => :green)
