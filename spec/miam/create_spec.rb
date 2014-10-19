@@ -53,6 +53,17 @@ describe 'create' do
               [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
           end
         end
+
+        role "my-role", :path=>"/any/" do
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
       RUBY
     end
 
@@ -96,6 +107,15 @@ describe 'create' do
                   {"Statement"=>
                     [{"Effect"=>"Allow",
                       "Action"=>"ses:SendRawEmail",
+                      "Resource"=>"*"}]}}}},
+           :roles=>
+            {"my-role"=>
+              {:path=>"/any/",
+               :policies=>
+                {"role-policy"=>
+                  {"Statement"=>
+                    [{"Action"=>["s3:Get*", "s3:List*"],
+                      "Effect"=>"Allow",
                       "Resource"=>"*"}]}}}}}
         )
       end

@@ -151,6 +151,20 @@ class Miam::Driver
     end
   end
 
+  def create_role(role_name, attrs)
+    log(:info, "Create Role `#{role_name}`", :color => :cyan)
+
+    unless_dry_run do
+      params = {:role_name => role_name}
+      params[:path] = attrs[:path] if attrs[:path]
+      @iam.create_role(params)
+    end
+
+    new_role_attrs = {:instance_profiles => [], :policies => {}}
+    new_role_attrs[:path] = attrs[:path] if attrs[:path]
+    new_role_attrs
+  end
+
   def delete_role(role_name, attrs)
     log(:info, "Delete Role `#{role_name}`", :color => :red)
 
@@ -160,6 +174,50 @@ class Miam::Driver
       end
 
       @iam.delete_role(:role_name => role_name)
+    end
+  end
+
+  def add_role_to_instance_profiles(role_name, instance_profile_names)
+    log(:info, "Update Role `#{role_name}`", :color => :green)
+    log(:info, "  add instance_profiles=#{instance_profile_names.join(',')}", :color => :green)
+
+    unless_dry_run do
+      instance_profile_names.each do |instance_profile_name|
+        @iam.add_role_to_instance_profile(:instance_profile_name => instance_profile_name, :role_name => role_name)
+      end
+    end
+  end
+
+  def remove_role_from_instance_profiles(role_name, instance_profile_names)
+    log(:info, "Update Role `#{role_name}`", :color => :green)
+    log(:info, "  remove instance_profiles=#{instance_profile_names.join(',')}", :color => :green)
+
+    unless_dry_run do
+      instance_profile_names.each do |instance_profile_name|
+        @iam.remove_role_from_instance_profile(:instance_profile_name => instance_profile_name, :role_name => role_name)
+      end
+    end
+  end
+
+  def create_instance_profile(instance_profile_name, attrs)
+    log(:info, "Create InstanceIrofile `#{instance_profile_name}`", :color => :cyan)
+
+    unless_dry_run do
+      params = {:instance_profile_name => instance_profile_name}
+      params[:path] = attrs[:path] if attrs[:path]
+      @iam.create_instance_profile(params)
+    end
+
+    new_instance_profile_attrs = {}
+    new_instance_profile_attrs[:path] = attrs[:path] if attrs[:path]
+    new_instance_profile_attrs
+  end
+
+  def delete_instance_profile(instance_profile_name, attrs)
+    log(:info, "Delete InstanceProfile `#{instance_profile_name}`", :color => :red)
+
+    unless_dry_run do
+      @iam.delete_instance_profile(:instance_profile_name => instance_profile_name)
     end
   end
 

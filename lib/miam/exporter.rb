@@ -12,17 +12,19 @@ class Miam::Exporter
     users = list_users
     groups = list_groups
     roles = list_roles
+    instance_profiles = list_instance_profiles
     group_users = {}
 
     export_options = {
-      :progress_total => (users.length + groups.length + roles.length),
+      :progress_total => (users.length + groups.length + roles.length + instance_profiles.length),
       :progress => 0,
     }
 
     expected = {
       :users => export_users(users, group_users, export_options, &block),
       :groups => export_groups(groups, export_options, &block),
-      :roles => export_roles(roles, export_options, &block)
+      :roles => export_roles(roles, export_options, &block),
+      :instance_profiles => export_instance_profiles(instance_profiles, export_options, &block),
     }
 
     [expected, group_users]
@@ -133,6 +135,7 @@ class Miam::Exporter
 
       result[role_name] = {
         :path => role.path,
+        :instance_profiles => export_role_instance_profiles(role_name),
         :policies => export_role_policies(role_name),
       }
 
@@ -141,6 +144,14 @@ class Miam::Exporter
     end
 
     result
+  end
+
+  def export_role_instance_profiles(role_name)
+    @iam.list_instance_profiles_for_role(:role_name => role_name).map {|resp|
+      resp.instance_profiles.map do |instance_profile|
+        instance_profile.instance_profile_name
+      end
+    }.flatten
   end
 
   def export_role_policies(role_name)
@@ -155,6 +166,31 @@ class Miam::Exporter
     end
 
     result
+  end
+
+  def export_instance_profiles(instance_profiles, export_options = {})
+    result = {}
+
+    instance_profiles.each do |instance_profile|
+      instance_profile_name = instance_profile.instance_profile_name
+
+      result[instance_profile_name] = {
+        :path => instance_profile.path,
+      }
+
+      export_options[:progress] += 1
+      yield(export_options) if block_given?
+    end
+
+    result
+  end
+
+  def export_role_instance_profiles(role_name)
+    @iam.list_instance_profiles_for_role(:role_name => role_name).map {|resp|
+      resp.instance_profiles.map do |instance_profile|
+        instance_profile.instance_profile_name
+      end
+    }.flatten
   end
 
   def list_users
@@ -172,6 +208,12 @@ class Miam::Exporter
   def list_roles
     @iam.list_roles.map {|resp|
       resp.roles.to_a
+    }.flatten
+  end
+
+  def list_instance_profiles
+    @iam.list_instance_profiles.map {|resp|
+      resp.instance_profiles.to_a
     }.flatten
   end
 end

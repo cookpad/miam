@@ -13,10 +13,10 @@ class Miam::Client
     end
 
     if block_given?
-      [:users, :groups, :roles].each do |users_or_groups_or_roles|
-        splitted = {:users => {}, :groups => {}, :roles => {}}
-        splitted[users_or_groups_or_roles] = exported[users_or_groups_or_roles]
-        yield(users_or_groups_or_roles, Miam::DSL.convert(splitted, @options).strip)
+      [:users, :groups, :roles, :instance_profiles].each do |type|
+        splitted = {:users => {}, :groups => {}, :roles => {}, :instance_profiles => {}}
+        splitted[type] = exported[type]
+        yield(type, Miam::DSL.convert(splitted, @options).strip)
       end
     else
       Miam::DSL.convert(exported, @options)
@@ -38,6 +38,7 @@ class Miam::Client
 
     updated = walk_groups(expected[:groups], actual[:groups], actual[:users], group_users)
     updated = walk_users(expected[:users], actual[:users], group_users) || updated
+    updated = walk_instance_profiles(expected[:instance_profiles], actual[:instance_profiles]) || updated
     updated = walk_roles(expected[:roles], actual[:roles]) || updated
 
     if @options[:dry_run]
@@ -176,7 +177,6 @@ class Miam::Client
       actual_attrs = actual.delete(role_name)
 
       if actual_attrs
-        updated = walk_path(:role, role_name, expected_attrs[:path], actual_attrs[:path]) || updated
         updated = walk_role(role_name, expected_attrs, actual_attrs) || updated
       else
         actual_attrs = @driver.create_role(role_name, expected_attrs)
@@ -194,7 +194,66 @@ class Miam::Client
   end
 
   def walk_role(role_name, expected_attrs, actual_attrs)
-    walk_policies(:role, role_name, expected_attrs[:policies], actual_attrs[:policies])
+    updated = walk_role_instance_profiles(role_name, expected_attrs[:instance_profiles], actual_attrs[:instance_profiles])
+    walk_policies(:role, role_name, expected_attrs[:policies], actual_attrs[:policies]) || updated
+  end
+
+  def walk_role_instance_profiles(role_name, expected_instance_profiles, actual_instance_profiles)
+    expected_instance_profiles = expected_instance_profiles.sort
+    actual_instance_profiles = actual_instance_profiles.sort
+    updated = false
+
+    if expected_instance_profiles != actual_instance_profiles
+      add_instance_profiles = expected_instance_profiles - actual_instance_profiles
+      remove_instance_profiles = actual_instance_profiles - expected_instance_profiles
+
+      unless add_instance_profiles.empty?
+        @driver.add_user_to_instance_profiles(user_name, add_instance_profiles)
+      end
+
+      unless remove_instance_profiles.empty?
+        @driver.remove_user_from_instance_profiles(user_name, remove_groups)
+      end
+
+      updated = true
+    end
+
+    updated
+  end
+
+  def walk_instance_profiles(expected, actual)
+    updated = false
+
+    expected.each do |instance_profile_name, expected_attrs|
+      actual_attrs = actual.delete(instance_profile_name)
+
+      if actual_attrs
+        updated = walk_instance_profile(instance_profile_name, expected_attrs, actual_attrs) || updated
+      else
+        actual_attrs = @driver.create_instance_profile(instance_profile_name, expected_attrs)
+        walk_instance_profile(instance_profile_name, expected_attrs, actual_attrs)
+        updated = true
+      end
+    end
+
+    actual.each do |instance_profile_name, attrs|
+      @driver.delete_instance_profile(instance_profile_name, attrs)
+      updated = true
+    end
+
+    updated
+  end
+
+  def walk_instance_profile(instance_profile_name, expected_attrs, actual_attrs)
+    updated = false
+
+    if expected_attrs != actual_attrs
+      @driver.delete_instance_profile(instance_profile_name, actual_attrs)
+      @driver.create_instance_profile(instance_profile_name, expected_attrs)
+      updated = true
+    end
+
+    updated
   end
 
   def scan_rename(type, expected, actual, group_users)

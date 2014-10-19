@@ -13,6 +13,7 @@ class Miam::DSL::Converter
       output_users(@exported[:users]),
       output_groups(@exported[:groups]),
       output_roles(@exported[:roles]),
+      output_instance_profiles(@exported[:instance_profiles]),
     ].join("\n")
   end
 
@@ -84,8 +85,35 @@ end
 
     <<-EOS
 role #{role_name.inspect}, #{Miam::Utils.unbrace(role_options.inspect)} do
+  #{output_role_instance_profiles(attrs[:instance_profiles])}
+
   #{output_policies(attrs[:policies])}
 end
+    EOS
+  end
+
+  def output_role_instance_profiles(instance_profiles)
+    if instance_profiles.empty?
+      instance_profiles = ['# no instance_profile']
+    else
+      instance_profiles = instance_profiles.map {|i| i.inspect }
+    end
+
+    instance_profiles = "\n    " + instance_profiles.join(",\n    ") + "\n  "
+    "instance_profiles(#{instance_profiles})"
+  end
+
+  def output_instance_profiles(instance_profiles)
+    instance_profiles.each.sort_by {|k, v| k }.map {|instance_profile_name, attrs|
+      output_instance_profile(instance_profile_name, attrs)
+    }.join("\n")
+  end
+
+  def output_instance_profile(instance_profile_name, attrs)
+    instance_profile_options = {:path => attrs[:path]}
+
+    <<-EOS
+instance_profile #{instance_profile_name.inspect}, #{Miam::Utils.unbrace(instance_profile_options.inspect)}
     EOS
   end
 
