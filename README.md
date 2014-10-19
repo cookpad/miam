@@ -1,6 +1,8 @@
 # Miam
 
-TODO: Write a gem description
+Miam is a tool to manage IAM.
+
+It defines the state of IAM using DSL, and updates IAM according to DSL.
 
 ## Installation
 
@@ -16,16 +18,95 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install miam
+    $ gem install miam --pre
 
 ## Usage
 
-TODO: Write usage instructions here
+```sh
+export AWS_ACCESS_KEY_ID='...'
+export AWS_SECRET_ACCESS_KEY='...'
+export AWS_REGION='us-east-1'
+miam -e -o IAMfile  # export IAM
+vi EIPfile
+miam -a --dry-run
+miam -a             # apply `IAMfile`
+```
 
-## Contributing
+## Help
 
-1. Fork it ( https://github.com/[my-github-username]/miam/fork )
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create a new Pull Request
+```
+Usage: miam [options]
+    -p, --profile PROFILE_NAME
+        --credentials-path PATH
+    -k, --access-key ACCESS_KEY
+    -s, --secret-key SECRET_KEY
+    -r, --region REGION
+    -a, --apply
+    -f, --file FILE
+        --dry-run
+        --account-output FILE
+    -e, --export
+    -o, --output FILE
+        --split
+        --no-color
+        --no-progress
+        --debug
+```
+
+## IAMfile example
+
+```ruby
+require 'other/iamfile'
+
+user "bob", path: "/developer" do
+  login_profile password_reset_required: true
+
+  groups(
+    "Admin"
+  )
+
+  policy "bob-policy" do
+    {"Version"=>"2012-10-17",
+     "Statement"=>
+      [{"Action"=>
+         ["s3:Get*",
+          "s3:List*"],
+        "Effect"=>"Allow",
+        "Resource"=>"*"}]}
+  end
+end
+
+user "mary", path: "/staff/" do
+  # login_profile password_reset_required: true
+
+  groups(
+    # no group
+  )
+
+  policy "s3-readonly" do
+    {"Version"=>"2012-10-17",
+     "Statement"=>
+      [{"Action"=>
+         ["s3:Get*",
+          "s3:List*"],
+        "Effect"=>"Allow",
+        "Resource"=>"*"}]}
+  end
+
+  policy "route53-readonly" do
+    {"Version"=>"2012-10-17",
+     "Statement"=>
+      [{"Action"=>
+         ["route53:Get*",
+          "route53:List*"],
+        "Effect"=>"Allow",
+        "Resource"=>"*"}]}
+  end
+end
+
+group "Admin", path: "/admin/" do
+  policy "Admin" do
+    {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+  end
+end
+```
