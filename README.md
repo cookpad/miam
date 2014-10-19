@@ -18,7 +18,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install miam --pre
+    $ gem install miam
 
 ## Usage
 
