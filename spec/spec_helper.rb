@@ -10,10 +10,18 @@ RSpec.configure do |config|
   config.before(:each) do
     apply { '' }
   end
+
+  config.after(:all) do
+    apply { '' }
+  end
 end
 
 def client(user_options = {})
-  options = {logger: Logger.new('/dev/null')}
+  options = {
+    password_manager: Miam::PasswordManager.new('/dev/null'),
+    logger: Logger.new('/dev/null'),
+    no_progress: true
+  }
 
   if_debug do
     logger = Miam::Logger.instance
@@ -49,6 +57,11 @@ def apply(cli = client)
   tempfile(yield) do |f|
     cli.apply(f.path)
   end
+end
+
+def export(options = {})
+  cli = options.delete(:client) || Aws::IAM::Client.new
+  Miam::Exporter.export(cli, options)[0]
 end
 
 def if_debug
