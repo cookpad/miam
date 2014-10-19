@@ -13,11 +13,13 @@ class Miam::DSL::Context::User
     @result[:login_profile] = value
   end
 
-  def groups(*groups)
-    @result[:groups].concat(groups)
+  def groups(*grps)
+    @result[:groups].concat(grps.map {|i| i.to_s })
   end
 
   def policy(name)
+    name = name.to_s
+
     if @result[:policies][name]
       raise "User `#{name}` > Policy `#{name}`: already defined"
     end

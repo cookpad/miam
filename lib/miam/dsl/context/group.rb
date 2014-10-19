@@ -10,6 +10,8 @@ class Miam::DSL::Context::Group
   private
 
   def policy(name)
+    name = name.to_s
+
     if @result[:policies][name]
       raise "Group `#{name}` > Policy `#{name}`: already defined"
     end

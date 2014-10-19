@@ -1,6 +1,6 @@
 class Miam::Exporter
-  def self.export(iam, options = {})
-    self.new(iam, options).export
+  def self.export(iam, options = {}, &block)
+    self.new(iam, options).export(&block)
   end
 
   def initialize(iam, options = {})
@@ -8,34 +8,43 @@ class Miam::Exporter
     @options = options
   end
 
-  def export
+  def export(&block)
+    users = list_users
+    groups = list_groups
+
+    export_options = {
+      :progress_total => (users.length + groups.length),
+      :progress => 0,
+    }
+
     {
-      :users => export_users,
-      :groups => export_groups,
+      :users => export_users(users, export_options, &block),
+      :groups => export_groups(groups, export_options, &block),
     }
   end
 
   private
 
-  def export_users
+  def export_users(users, export_options = {})
     result = {}
 
-    @iam.list_users.each do |resp|
-      resp.users.each do |user|
-        user_name = user.user_name
+    users.each do |user|
+      user_name = user.user_name
 
-        result[user_name] = {
-          :path => user.path,
-          :groups => export_user_groups(user_name),
-          :policies => export_user_policies(user_name),
-        }
+      result[user_name] = {
+        :path => user.path,
+        :groups => export_user_groups(user_name),
+        :policies => export_user_policies(user_name),
+      }
 
-        login_profile = export_login_profile(user_name)
+      login_profile = export_login_profile(user_name)
 
-        if login_profile
-          result[user_name][:login_profile] = login_profile
-        end
+      if login_profile
+        result[user_name][:login_profile] = login_profile
       end
+
+      export_options[:progress] += 1
+      yield(export_options) if block_given?
     end
 
     result
@@ -72,18 +81,19 @@ class Miam::Exporter
     end
   end
 
-  def export_groups
+  def export_groups(groups, export_options = {})
     result = {}
 
-    @iam.list_groups.each do |resp|
-      resp.groups.each do |group|
-        group_name = group.group_name
+    groups.each do |group|
+      group_name = group.group_name
 
-        result[group_name] = {
-          :path => group.path,
-          :policies => export_group_policies(group_name),
-        }
-      end
+      result[group_name] = {
+        :path => group.path,
+        :policies => export_group_policies(group_name),
+      }
+
+      export_options[:progress] += 1
+      yield(export_options) if block_given?
     end
 
     result
@@ -101,5 +111,17 @@ class Miam::Exporter
     end
 
     result
+  end
+
+  def list_users
+    @iam.list_users.map {|resp|
+      resp.users.to_a
+    }.flatten
+  end
+
+  def list_groups
+    @iam.list_groups.map {|resp|
+      resp.groups.to_a
+    }.flatten
   end
 end

@@ -7,7 +7,10 @@ class Miam::Client
   end
 
   def export
-    exported = Miam::Exporter.export(@iam, @options)
+    exported = Miam::Exporter.export(@iam, @options) do |export_options|
+      progress(*export_options.values_at(:progress_total, :progress))
+    end
+
     Miam::DSL.convert(exported, @options)
   end
 
@@ -19,8 +22,125 @@ class Miam::Client
 
   def walk(file)
     expected = load_file(file)
-    #actual = Miam::Exporter.export(@iam, @options)
-    # XXX:
+
+    actual = Miam::Exporter.export(@iam, @options) do |export_options|
+      progress(*export_options.values_at(:progress_total, :progress))
+    end
+
+    updated = walk_users(expected[:users], actual[:users])
+    walk_groups(expected[:groups], actual[:groups]) || updated
+  end
+
+  def walk_users(expected, actual)
+    updated = false
+
+    expected.each do |user_name, expected_attrs|
+      actual_attrs = actual.delete(user_name)
+
+      if actual_attrs
+        updated = walk_user(user_name, expected_attrs, actual_attrs) || updated
+      else
+        # XXX: create user
+        updated = true
+      end
+    end
+
+    actual.each do |user_name, attrs|
+      # XXX: delete user
+      updated = true
+    end
+
+    updated
+  end
+
+  def walk_user(user_name, expected_attrs, actual_attrs)
+    updated = walk_login_profile(
+                user_name,
+                expected_attrs[:login_profile],
+                actual_attrs[:login_profile])
+
+    updated = walk_user_groups(
+                user_name,
+                expected_attrs[:groups],
+                actual_attrs[:groups]) || updated
+
+
+  end
+
+  def walk_login_profile(user_name, expected_login_profile, actual_login_profile)
+    updated = false
+
+    if expected_login_profile != actual_login_profile
+      if expected_login_profile
+        # XXX: create login_profile
+      else
+        # XXX: delete login_profile
+      end
+
+      updated = true
+    end
+
+    updated
+  end
+
+  def walk_user_groups(user_name, expected_groups, actual_groups)
+    expected_groups = expected_groups.sort
+    actual_groups = actual_groups.sort
+    updated = false
+
+    if expected_groups != actual_groups
+      add_groups = expected_groups - actual_groups
+      remove_groups = actual_groups - expected_groups
+
+      if add_groups
+        # XXX: add_user_to_group
+      end
+
+      if remove_groups
+        # XXX: remove_user_from_group
+      end
+
+      updated = true
+    end
+
+    updated
+  end
+
+  def walk_groups(expected, actual)
+    #p expected
+  end
+
+  def walk_policies(type, user_or_group_name, expected_policies, actual_policies)
+    updated = false
+
+    expected_policies.each do |policy_name, expected_document|
+      actual_document = actual_policies.delete(policy_name)
+
+      if actual_document
+        updated = walk_policy(type, user_or_group_name, policy_name, expected_document, actual_document) || updated
+      else
+        # XXX: create policy
+        updated = true
+      end
+    end
+
+    actual_policies.each do |policy_name, document|
+      # XXX: delete policy
+      updated = true
+    end
+
+    updated
+  end
+
+  def walk_policy(type, user_or_group_name, policy_name, expected_document, actual_document)
+    updated = false
+
+    if expected_document != actual_document
+      # XXX: updated policy
+      updated = true
+    end
+
+    updated
   end
 
   def load_file(file)
@@ -33,5 +153,15 @@ class Miam::Client
     else
       raise TypeError, "can't convert #{file} into File"
     end
+  end
+
+  def progress(total, n)
+    return if @options[:no_progress]
+
+    unless @progressbar
+      @progressbar = ProgressBar.create(:title => "Loading", :total => total, :output => $stderr)
+    end
+
+    @progressbar.progress = n
   end
 end
