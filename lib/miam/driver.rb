@@ -58,6 +58,10 @@ class Miam::Driver
         @iam.delete_access_key(:user_name => user_name, :access_key_id => access_key_id)
       end
 
+      list_signing_certificate_ids(user_name).each do |certificate_id|
+        @iam.delete_signing_certificate(:user_name => user_name, :certificate_id => certificate_id)
+      end
+
       @iam.delete_user(:user_name => user_name)
     end
   end
@@ -205,6 +209,14 @@ class Miam::Driver
     @iam.list_access_keys(:user_name => user_name).map {|resp|
       resp.access_key_metadata.map do |metadata|
         metadata.access_key_id
+      end
+    }.flatten
+  end
+
+  def list_signing_certificate_ids(user_name)
+    @iam.list_signing_certificates(:user_name => user_name).map {|resp|
+      resp.certificates.map do |cert|
+        cert.certificate_id
       end
     }.flatten
   end
