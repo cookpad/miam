@@ -16,6 +16,10 @@ class Miam::Driver
       params[:path] = attrs[:path] if attrs[:path]
       @iam.create_user(params)
     end
+
+    new_user_attrs = {:groups => [], :policies => {}}
+    new_user_attrs[:path] = attrs[:path] if attrs[:path]
+    new_user_attrs
   end
 
   def delete_user(user_name, attrs)
@@ -105,6 +109,10 @@ class Miam::Driver
       params[:path] = attrs[:path] if attrs[:path]
       @iam.create_group(params)
     end
+
+    new_group_attrs = {:policies => {}}
+    new_group_attrs[:path] = attrs[:path] if attrs[:path]
+    new_group_attrs
   end
 
   def delete_group(group_name, attrs, users_in_group)

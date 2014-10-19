@@ -28,7 +28,7 @@ class Miam::Client
       progress(*export_options.values_at(:progress_total, :progress))
     end
 
-    updated = walk_groups(expected[:groups], actual[:groups], group_users)
+    updated = walk_groups(expected[:groups], actual[:groups], actual[:users], group_users)
     updated = walk_users(expected[:users], actual[:users], group_users) || updated
 
     if @options[:dry_run]
@@ -47,14 +47,20 @@ class Miam::Client
       if actual_attrs
         updated = walk_user(user_name, expected_attrs, actual_attrs) || updated
       else
-        @driver.create_user(user_name, expected_attrs)
+        actual_attrs = @driver.create_user(user_name, expected_attrs)
         # XXX: create key
+        walk_user(user_name, expected_attrs, actual_attrs)
         updated = true
       end
     end
 
     actual.each do |user_name, attrs|
       @driver.delete_user(user_name, attrs)
+
+      group_users.each do |group_name, users|
+        users.delete(user_name)
+      end
+
       updated = true
     end
 
@@ -114,7 +120,7 @@ class Miam::Client
     updated
   end
 
-  def walk_groups(expected, actual, group_users)
+  def walk_groups(expected, actual, actual_users, group_users)
     updated = scan_rename(:group, expected, actual, group_users)
 
     expected.each do |group_name, expected_attrs|
@@ -124,14 +130,20 @@ class Miam::Client
         updated = walk_path(:group, group_name, expected_attrs[:path], actual_attrs[:path]) || updated
         updated = walk_group(group_name, expected_attrs, actual_attrs) || updated
       else
-        @driver.create_group(group_name, expected_attrs)
+        actual_attrs = @driver.create_group(group_name, expected_attrs)
+        walk_group(group_name, expected_attrs, actual_attrs)
         updated = true
       end
     end
 
     actual.each do |group_name, attrs|
-      users_in_group = group_users[group_name] || []
+      users_in_group = group_users.delete(group_name) || []
       @driver.delete_group(group_name, attrs, users_in_group)
+
+      actual_users.each do |user_name, user_attrs|
+        user_attrs[:groups].delete(group_name)
+      end
+
       updated = true
     end
 
