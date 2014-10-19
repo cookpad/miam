@@ -151,6 +151,18 @@ class Miam::Driver
     end
   end
 
+  def delete_role(role_name, attrs)
+    log(:info, "Delete Role `#{role_name}`", :color => :red)
+
+    unless_dry_run do
+      attrs[:policies].keys.each do |policy_name|
+        @iam.delete_role_policy(:role_name => role_name, :policy_name => policy_name)
+      end
+
+      @iam.delete_role(:role_name => role_name)
+    end
+  end
+
   def update_name(type, user_or_group_name, new_name)
     log(:info, "Update #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}`", :color => :green)
     log(:info, "  set name=#{new_name}", :color => :green)

@@ -12,6 +12,7 @@ class Miam::DSL::Converter
     [
       output_users(@exported[:users]),
       output_groups(@exported[:groups]),
+      output_roles(@exported[:roles]),
     ].join("\n")
   end
 
@@ -67,6 +68,22 @@ end
 
     <<-EOS
 group #{group_name.inspect}, #{Miam::Utils.unbrace(group_options.inspect)} do
+  #{output_policies(attrs[:policies])}
+end
+    EOS
+  end
+
+  def output_roles(roles)
+    roles.each.sort_by {|k, v| k }.map {|role_name, attrs|
+      output_role(role_name, attrs)
+    }.join("\n")
+  end
+
+  def output_role(role_name, attrs)
+    role_options = {:path => attrs[:path]}
+
+    <<-EOS
+role #{role_name.inspect}, #{Miam::Utils.unbrace(role_options.inspect)} do
   #{output_policies(attrs[:policies])}
 end
     EOS

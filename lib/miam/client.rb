@@ -13,10 +13,10 @@ class Miam::Client
     end
 
     if block_given?
-      [:users, :groups].each do |users_or_groups|
-        splitted = {:users => {}, :groups => {}}
-        splitted[users_or_groups] = exported[users_or_groups]
-        yield(users_or_groups, Miam::DSL.convert(splitted, @options).strip)
+      [:users, :groups, :roles].each do |users_or_groups_or_roles|
+        splitted = {:users => {}, :groups => {}, :roles => {}}
+        splitted[users_or_groups_or_roles] = exported[users_or_groups_or_roles]
+        yield(users_or_groups_or_roles, Miam::DSL.convert(splitted, @options).strip)
       end
     else
       Miam::DSL.convert(exported, @options)
@@ -38,6 +38,7 @@ class Miam::Client
 
     updated = walk_groups(expected[:groups], actual[:groups], actual[:users], group_users)
     updated = walk_users(expected[:users], actual[:users], group_users) || updated
+    updated = walk_roles(expected[:roles], actual[:roles]) || updated
 
     if @options[:dry_run]
       false
@@ -166,6 +167,34 @@ class Miam::Client
 
   def walk_group(group_name, expected_attrs, actual_attrs)
     walk_policies(:group, group_name, expected_attrs[:policies], actual_attrs[:policies])
+  end
+
+  def walk_roles(expected, actual)
+    updated = false
+
+    expected.each do |role_name, expected_attrs|
+      actual_attrs = actual.delete(role_name)
+
+      if actual_attrs
+        updated = walk_path(:role, role_name, expected_attrs[:path], actual_attrs[:path]) || updated
+        updated = walk_role(role_name, expected_attrs, actual_attrs) || updated
+      else
+        actual_attrs = @driver.create_role(role_name, expected_attrs)
+        walk_role(role_name, expected_attrs, actual_attrs)
+        updated = true
+      end
+    end
+
+    actual.each do |role_name, attrs|
+      @driver.delete_role(role_name, attrs)
+      updated = true
+    end
+
+    updated
+  end
+
+  def walk_role(role_name, expected_attrs, actual_attrs)
+    walk_policies(:role, role_name, expected_attrs[:policies], actual_attrs[:policies])
   end
 
   def scan_rename(type, expected, actual, group_users)
