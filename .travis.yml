@@ -9,4 +9,4 @@ env:
   - secure: "Ec8bwSfp06anSzLJpGhkKjPz9EocMwl7H8t2LKoI3bKV/cz9JU0GhhUdUUmg3mCFH9+8/YGLzcbFKcxZIqnDK7ukdgTGsnGDevnctis0QwM7/nKHdkaK8JWhCx41TUXOqoiCKkNEnm1EbDtrILt4rJwb0BGXGnPjv6nLAyvdE2Y="
   - secure: "Ky5Dpxc7SIqbQ4Y10m/jik/rVdeGMeh1439m3KB+tiV/Bz1hhWv4+If150ajLjbmWCZBPMLhxrTL0EePoyqYXpOGHvINvYM+/XCPcpP4iYkaTzr1MVIOMpa8A8aAOOgQWoGOwfyWoxfrYzv/TRvtMietnm+dZwVcbbkQ4ut7oa4="
   - AWS_REGION=ap-northeast-1
-  - TEST_WAIT=7
+  - TEST_WAIT=3

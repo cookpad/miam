@@ -61,6 +61,8 @@ describe 'create' do
 
       it do
         updated = apply(subject) { dsl }
+        wait_if_env
+
         expect(updated).to be_truthy
         expect(export).to eq(
           {:users=>

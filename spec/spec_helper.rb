@@ -18,8 +18,8 @@ Aws.config.update(
 
 RSpec.configure do |config|
   config.before(:each) do
-    wait_if_env
     apply { '' }
+    wait_if_env
   end
 
   config.after(:all) do
