@@ -133,13 +133,13 @@ class Miam::Client
       if actual_document
         updated = walk_policy(type, user_or_group_name, policy_name, expected_document, actual_document) || updated
       else
-        # XXX: create policy
+        @driver.create_policy(type, user_or_group_name, policy_name, expected_document)
         updated = true
       end
     end
 
     actual_policies.each do |policy_name, document|
-      # XXX: delete policy
+      @driver.delete_policy(type, user_or_group_name, policy_name)
       updated = true
     end
 
@@ -150,8 +150,7 @@ class Miam::Client
     updated = false
 
     if expected_document != actual_document
-      @driver.put_policy(type, user_or_group_name, policy_name, expected_document)
-      # XXX: updated policy
+      @driver.update_policy(type, user_or_group_name, policy_name, expected_document)
       updated = true
     end
 
