@@ -58,7 +58,7 @@ Usage: miam [options]
 ```ruby
 require 'other/iamfile'
 
-user "bob", path: "/developer/" do
+user "bob", :path => "/developer/" do
   login_profile password_reset_required: true
 
   groups(
@@ -76,7 +76,7 @@ user "bob", path: "/developer/" do
   end
 end
 
-user "mary", path: "/staff/" do
+user "mary", :path => "/staff/" do
   # login_profile password_reset_required: true
 
   groups(
@@ -104,9 +104,23 @@ user "mary", path: "/staff/" do
   end
 end
 
-group "Admin", path: "/admin/" do
+group "Admin", :path => "/admin/" do
   policy "Admin" do
     {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
   end
+end
+```
+
+## Rename
+
+```ruby
+require 'other/iamfile'
+
+user "bob2", :path => "/developer/", :renamed_from => "bob" do
+  # ...
+end
+
+group "Admin2", :path => "/admin/". :renamed_from => "Admin" do
+  # ...
 end
 ```
