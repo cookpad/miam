@@ -12,7 +12,15 @@ class Miam::Client
       progress(*export_options.values_at(:progress_total, :progress))
     end
 
-    Miam::DSL.convert(exported, @options)
+    if block_given?
+      [:users, :groups].each do |users_or_groups|
+        splitted = {:users => {}, :groups => {}}
+        splitted[users_or_groups] = exported[users_or_groups]
+        yield(users_or_groups, Miam::DSL.convert(splitted, @options).strip)
+      end
+    else
+      Miam::DSL.convert(exported, @options)
+    end
   end
 
   def apply(file)

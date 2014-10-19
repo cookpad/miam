@@ -91,12 +91,11 @@ begin
   when :export
     if split
       logger.info('Export IAM')
-=begin
       output_file = DEFAULT_FILENAME if output_file == '-'
       requires = []
 
-      client.export do |user, dsl|
-        iam_file = File.join(File.dirname(output_file), "#{user}.iam")
+      client.export do |users_or_groups, dsl|
+        iam_file = File.join(File.dirname(output_file), "#{users_or_groups}.iam")
         requires << iam_file
         logger.info("  write `#{iam_file}`")
 
@@ -112,7 +111,6 @@ begin
           f.puts "require '#{File.basename iam_file}'"
         end
       end
-=end
     else
       if output_file == '-'
         logger.info('# Export IAM')
