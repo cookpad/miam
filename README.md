@@ -27,7 +27,7 @@ export AWS_ACCESS_KEY_ID='...'
 export AWS_SECRET_ACCESS_KEY='...'
 export AWS_REGION='us-east-1'
 miam -e -o IAMfile  # export IAM
-vi EIPfile
+vi IAMfile
 miam -a --dry-run
 miam -a             # apply `IAMfile`
 ```
