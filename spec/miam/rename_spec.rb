@@ -200,4 +200,63 @@ describe 'update' do
       expect(export).to eq expected
     end
   end
+
+  context 'when rename without renamed_from' do
+    let(:rename_without_renamed_from_dsl) do
+      <<-RUBY
+        user "bob2", :path=>"/devloper/" do
+          login_profile :password_reset_required=>true
+
+          groups(
+            "Admin",
+            "SES2"
+          )
+
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        user "mary", :path=>"/staff/" do
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        group "Admin", :path=>"/admin/" do
+          policy "Admin" do
+            {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+          end
+        end
+
+        group "SES2", :path=>"/ses/" do
+          policy "ses-policy" do
+            {"Statement"=>
+              [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
+          end
+        end
+      RUBY
+    end
+
+    subject { client }
+
+    it do
+      updated = apply(subject) { rename_without_renamed_from_dsl }
+      expect(updated).to be_truthy
+      expected[:users]["bob"][:groups] = ["Admin", "SES2"]
+      expected[:users]["bob2"] = expected[:users].delete("bob")
+      expected[:groups]["SES2"] = expected[:groups].delete("SES")
+      expect(export).to eq expected
+    end
+  end
 end
