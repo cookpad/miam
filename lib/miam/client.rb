@@ -199,6 +199,10 @@ class Miam::Client
   end
 
   def walk_role(role_name, expected_attrs, actual_attrs)
+    if expected_attrs.values_at(:path, :assume_role_policy_document) != actual_attrs.values_at(:path, :assume_role_policy_document)
+      # XXX: warning
+    end
+
     updated = walk_role_instance_profiles(role_name, expected_attrs[:instance_profiles], actual_attrs[:instance_profiles])
     walk_policies(:role, role_name, expected_attrs[:policies], actual_attrs[:policies]) || updated
   end
@@ -259,9 +263,8 @@ class Miam::Client
     updated = false
 
     if expected_attrs != actual_attrs
-      @driver.delete_instance_profile(instance_profile_name, actual_attrs)
-      @driver.create_instance_profile(instance_profile_name, expected_attrs)
-      updated = true
+      # XXX: warning
+      #updated = true
     end
 
     updated

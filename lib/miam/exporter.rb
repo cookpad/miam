@@ -141,8 +141,11 @@ class Miam::Exporter
         instance_profile_roles[instance_profile_name] << role_name
       end
 
+      document = CGI.unescape(role.assume_role_policy_document)
+
       result[role_name] = {
         :path => role.path,
+        :assume_role_policy_document => JSON.parse(document),
         :instance_profiles => instance_profiles,
         :policies => export_role_policies(role_name),
       }

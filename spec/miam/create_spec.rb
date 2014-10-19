@@ -5,7 +5,7 @@ describe 'create' do
     it do
       updated = apply(subject) { '' }
       expect(updated).to be_falsey
-      expect(export).to eq({:users=>{}, :groups=>{}})
+      expect(export).to eq({:users=>{}, :groups=>{}, :roles=>{}, :instance_profiles=>{}})
     end
   end
 
@@ -55,7 +55,22 @@ describe 'create' do
         end
 
         role "my-role", :path=>"/any/" do
+          instance_profiles(
+            "my-instance-profile"
+          )
+
           policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/" do
+          policy "instance-profile-policy" do
             {"Statement"=>
               [{"Action"=>
                  ["s3:Get*",
@@ -127,7 +142,7 @@ describe 'create' do
       it do
         updated = apply(subject) { dsl }
         expect(updated).to be_falsey
-        expect(export).to eq({:users=>{}, :groups=>{}})
+        expect(export).to eq({:users=>{}, :groups=>{}, :roles=>{}, :instance_profiles=>{}})
       end
     end
   end

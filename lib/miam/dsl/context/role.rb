@@ -13,6 +13,20 @@ class Miam::DSL::Context::Role
     @result[:instance_profiles].concat(profiles.map {|i| i.to_s })
   end
 
+  def assume_role_policy_document
+    if @result[:assume_role_policy_document]
+      raise "Role `#{name}` > AssumeRolePolicyDocument: already defined"
+    end
+
+    assume_role_policy_document = yield
+
+    unless assume_role_policy_document.kind_of?(Hash)
+      raise "Role `#{name}` > AssumeRolePolicyDocument: wrong argument type #{policy_document.class} (expected Hash)"
+    end
+
+    @result[:assume_role_policy_document] = assume_role_policy_document
+  end
+
   def policy(name)
     name = name.to_s
 
