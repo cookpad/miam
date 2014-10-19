@@ -53,6 +53,7 @@ class Miam::Client
       actual_attrs = actual.delete(user_name)
 
       if actual_attrs
+        updated = walk_path(:user, user_name, expected_attrs[:path], actual_attrs[:path]) || updated
         updated = walk_user(user_name, expected_attrs, actual_attrs) || updated
       else
         actual_attrs = @driver.create_user(user_name, expected_attrs)

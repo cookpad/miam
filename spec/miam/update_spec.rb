@@ -96,7 +96,7 @@ describe 'update' do
     end
   end
 
-  context 'update policy' do
+  context 'when update policy' do
     let(:update_policy_dsl) do
       <<-RUBY
         user "bob", :path=>"/devloper/" do
@@ -151,6 +151,64 @@ describe 'update' do
       expect(updated).to be_truthy
       expected[:users]["mary"][:policies]["S3"]["Statement"][0]["Action"] = ["s3:Get*", "s3:Put*", "s3:List*"]
       expected[:groups]["SES"][:policies]["ses-policy"]["Statement"][0]["Action"] = "*"
+      expect(export).to eq expected
+    end
+  end
+
+  context 'when update path' do
+    let(:update_path_dsl) do
+      <<-RUBY
+        user "bob", :path=>"/devloper/" do
+          login_profile :password_reset_required=>true
+
+          groups(
+            "Admin",
+            "SES"
+          )
+
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        user "mary", :path=>"/xstaff/" do
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        group "Admin", :path=>"/admin/" do
+          policy "Admin" do
+            {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+          end
+        end
+
+        group "SES", :path=>"/ses/ses/" do
+          policy "ses-policy" do
+            {"Statement"=>
+              [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
+          end
+        end
+      RUBY
+    end
+
+    subject { client }
+
+    it do
+      updated = apply(subject) { update_path_dsl }
+      expect(updated).to be_truthy
+      expected[:users]["mary"][:path] = "/xstaff/"
+      expected[:groups]["SES"][:path] = "/ses/ses/"
       expect(export).to eq expected
     end
   end
