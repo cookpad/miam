@@ -1,6 +1,11 @@
 require 'tempfile'
 require 'miam'
 
+Aws.config.update(
+  access_key_id: ENV['MIAM_TEST_ACCESS_KEY_ID'],
+  secret_access_key: ENV['MIAM_TEST_SECRET_ACCESS_KEY']
+)
+
 RSpec.configure do |config|
   config.before(:each) do
     apply { '' }
