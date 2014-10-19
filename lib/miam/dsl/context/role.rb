@@ -1,11 +1,17 @@
 class Miam::DSL::Context::Role
   def initialize(name, &block)
-    @name = name
+    @role_name = name
     @result = {:instance_profiles => [], :policies => {}}
     instance_eval(&block)
   end
 
-  attr_reader :result
+  def result
+    unless @result[:assume_role_policy_document]
+      raise "Role `#{@role_name}`: AssumeRolePolicyDocument is not defined"
+    end
+
+    @result
+  end
 
   private
 
@@ -15,13 +21,13 @@ class Miam::DSL::Context::Role
 
   def assume_role_policy_document
     if @result[:assume_role_policy_document]
-      raise "Role `#{name}` > AssumeRolePolicyDocument: already defined"
+      raise "Role `#{@role_name}` > AssumeRolePolicyDocument: already defined"
     end
 
     assume_role_policy_document = yield
 
     unless assume_role_policy_document.kind_of?(Hash)
-      raise "Role `#{name}` > AssumeRolePolicyDocument: wrong argument type #{policy_document.class} (expected Hash)"
+      raise "Role `#{@role_name}` > AssumeRolePolicyDocument: wrong argument type #{policy_document.class} (expected Hash)"
     end
 
     @result[:assume_role_policy_document] = assume_role_policy_document
@@ -31,13 +37,13 @@ class Miam::DSL::Context::Role
     name = name.to_s
 
     if @result[:policies][name]
-      raise "Role `#{name}` > Policy `#{name}`: already defined"
+      raise "Role `#{@role_name}` > Policy `#{name}`: already defined"
     end
 
     policy_document = yield
 
     unless policy_document.kind_of?(Hash)
-      raise "Role `#{name}` > Policy `#{name}`: wrong argument type #{policy_document.class} (expected Hash)"
+      raise "Role `#{@role_name}` > Policy `#{name}`: wrong argument type #{policy_document.class} (expected Hash)"
     end
 
     @result[:policies][name] = policy_document

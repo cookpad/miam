@@ -153,14 +153,24 @@ class Miam::Driver
 
   def create_role(role_name, attrs)
     log(:info, "Create Role `#{role_name}`", :color => :cyan)
+    assume_role_policy_document = attrs.fetch(:assume_role_policy_document)
 
     unless_dry_run do
-      params = {:role_name => role_name}
+      params = {
+        :role_name => role_name,
+        :assume_role_policy_document => encode_document(assume_role_policy_document),
+      }
+
       params[:path] = attrs[:path] if attrs[:path]
       @iam.create_role(params)
     end
 
-    new_role_attrs = {:instance_profiles => [], :policies => {}}
+    new_role_attrs = {
+      :instance_profiles => [],
+      :assume_role_policy_document => assume_role_policy_document,
+      :policies => {}
+    }
+
     new_role_attrs[:path] = attrs[:path] if attrs[:path]
     new_role_attrs
   end

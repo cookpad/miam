@@ -1,6 +1,6 @@
 class Miam::DSL::Context::Group
   def initialize(name, &block)
-    @name = name
+    @group_name = name
     @result = {:policies => {}}
     instance_eval(&block)
   end
@@ -13,13 +13,13 @@ class Miam::DSL::Context::Group
     name = name.to_s
 
     if @result[:policies][name]
-      raise "Group `#{name}` > Policy `#{name}`: already defined"
+      raise "Group `#{@group_name}` > Policy `#{name}`: already defined"
     end
 
     policy_document = yield
 
     unless policy_document.kind_of?(Hash)
-      raise "Group `#{name}` > Policy `#{name}`: wrong argument type #{policy_document.class} (expected Hash)"
+      raise "Group `#{@group_name}` > Policy `#{name}`: wrong argument type #{policy_document.class} (expected Hash)"
     end
 
     @result[:policies][name] = policy_document
