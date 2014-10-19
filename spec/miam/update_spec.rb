@@ -213,6 +213,68 @@ describe 'update' do
     end
   end
 
+  context 'when update groups' do
+    let(:update_groups_dsl) do
+      <<-RUBY
+        user "bob", :path=>"/devloper/" do
+          login_profile :password_reset_required=>true
+
+          groups(
+            "Admin"
+          )
+
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        user "mary", :path=>"/staff/" do
+          groups(
+            "Admin",
+            "SES"
+          )
+
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        group "Admin", :path=>"/admin/" do
+          policy "Admin" do
+            {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+          end
+        end
+
+        group "SES", :path=>"/ses/" do
+          policy "ses-policy" do
+            {"Statement"=>
+              [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
+          end
+        end
+      RUBY
+    end
+
+    subject { client }
+
+    it do
+      updated = apply(subject) { update_groups_dsl }
+      expect(updated).to be_truthy
+      expected[:users]["bob"][:groups] = ["Admin"]
+      expected[:users]["mary"][:groups] = ["Admin", "SES"]
+      expect(export).to eq expected
+    end
+  end
+
   context 'when update login_profile' do
     let(:update_login_profile_dsl) do
       <<-RUBY
