@@ -86,7 +86,7 @@ describe 'update' do
     apply { dsl }
   end
 
-  context 'no change' do
+  context 'when no change' do
     subject { client }
 
     it do
