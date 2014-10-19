@@ -84,7 +84,7 @@ class Miam::Client
   def walk_user(user_name, expected_attrs, actual_attrs)
     updated = walk_login_profile(user_name, expected_attrs[:login_profile], actual_attrs[:login_profile])
     updated = walk_user_groups(user_name, expected_attrs[:groups], actual_attrs[:groups]) || updated
-    walk_policies(:user, user_name, expected_attrs[:policies], actual_attrs[:policies])
+    walk_policies(:user, user_name, expected_attrs[:policies], actual_attrs[:policies]) || updated
   end
 
   def walk_login_profile(user_name, expected_login_profile, actual_login_profile)
