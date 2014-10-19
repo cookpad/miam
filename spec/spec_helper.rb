@@ -18,12 +18,12 @@ Aws.config.update(
 
 RSpec.configure do |config|
   config.before(:each) do
-    wait_if ENV['TEST_WAIT']
+    wait_if_env
     apply { '' }
   end
 
   config.after(:all) do
-    wait_if ENV['TEST_WAIT']
+    wait_if_env
     apply { '' }
   end
 end
@@ -80,6 +80,6 @@ def if_debug
   yield if ENV['DEBUG'] == '1'
 end
 
-def wait_if(env)
-  sleep env.to_i if env
+def wait_if_env
+  sleep ENV['TEST_WAIT'].to_i if ENV['TEST_WAIT']
 end
