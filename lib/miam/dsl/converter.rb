@@ -27,7 +27,7 @@ class Miam::DSL::Converter
     user_options = {:path => attrs[:path]}
 
     <<-EOS
-user #{user_name.inspect}, #{unbrace(user_options.inspect)} do
+user #{user_name.inspect}, #{Miam::Utils.unbrace(user_options.inspect)} do
   #{output_login_profile(attrs[:login_profile])}
 
   #{output_user_groups(attrs[:groups])}
@@ -50,7 +50,7 @@ end
 
   def output_login_profile(login_profile)
     if login_profile
-      "login_profile #{unbrace(login_profile.inspect)}"
+      "login_profile #{Miam::Utils.unbrace(login_profile.inspect)}"
     else
       '# login_profile :password_reset_required=>true'
     end
@@ -66,7 +66,7 @@ end
     group_options = {:path => attrs[:path]}
 
     <<-EOS
-group #{group_name.inspect}, #{unbrace(group_options.inspect)} do
+group #{group_name.inspect}, #{Miam::Utils.unbrace(group_options.inspect)} do
   #{output_policies(attrs[:policies])}
 end
     EOS
@@ -87,9 +87,5 @@ end
     #{policy_document}
   end
     EOS
-  end
-
-  def unbrace(str)
-    str.sub(/\A\s*\{/, '').sub(/\}\s*\z/, '')
   end
 end
