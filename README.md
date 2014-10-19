@@ -113,6 +113,28 @@ group "Admin", :path => "/admin/" do
     {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
   end
 end
+
+role "S3", :path => "/" do
+  instance_profiles(
+    "S3"
+  )
+
+  assume_role_policy_document do
+    {"Version"=>"2012-10-17",
+     "Statement"=>
+      [{"Sid"=>"",
+        "Effect"=>"Allow",
+        "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+        "Action"=>"sts:AssumeRole"}]}
+  end
+
+  policy "S3-role-policy" do
+    {"Version"=>"2012-10-17",
+     "Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+  end
+end
+
+instance_profile "S3", :path => "/"
 ```
 
 ## Rename
