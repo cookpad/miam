@@ -58,7 +58,7 @@ Usage: miam [options]
 ```ruby
 require 'other/iamfile'
 
-user "bob", path: "/developer" do
+user "bob", path: "/developer/" do
   login_profile password_reset_required: true
 
   groups(
