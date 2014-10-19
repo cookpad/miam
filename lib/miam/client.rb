@@ -99,12 +99,13 @@ class Miam::Client
   end
 
   def walk_groups(expected, actual)
-    updated = false
+    updated = scan_rename(:group, expected, actual)
 
     expected.each do |group_name, expected_attrs|
       actual_attrs = actual.delete(group_name)
 
       if actual_attrs
+        updated = walk_path(:group, group_name, expected_attrs[:path], actual_attrs[:path]) || updated
         updated = walk_group(group_name, expected_attrs, actual_attrs) || updated
       else
         @driver.create_group(group_name, expected_attrs)
@@ -122,6 +123,35 @@ class Miam::Client
 
   def walk_group(group_name, expected_attrs, actual_attrs)
     walk_policies(:group, group_name, expected_attrs[:policies], actual_attrs[:policies])
+  end
+
+  def scan_rename(type, expected, actual)
+    updated = false
+
+    expected.each do |name, expected_attrs|
+      renamed_from = expected_attrs[:renamed_from]
+      next unless renamed_from
+
+      actual_attrs = actual.delete(renamed_from)
+      next unless actual_attrs
+
+      @driver.update_name(type, renamed_from, name)
+      actual[name] = actual_attrs
+      updated = true
+    end
+
+    updated
+  end
+
+  def walk_path(type, user_or_group_name, expected_path, actual_path)
+    updated = false
+
+    if expected_path != actual_path
+      @driver.update_path(type, user_or_group_name, expected_path)
+      updated = true
+    end
+
+    updated
   end
 
   def walk_policies(type, user_or_group_name, expected_policies, actual_policies)

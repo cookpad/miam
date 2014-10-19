@@ -26,15 +26,34 @@ class Miam::Driver
     end
   end
 
+  def update_name(type, user_or_group_name, new_name)
+    log(:info, "Update #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}`", :color => :green)
+    log(:info, "  set name=#{new_name}", :color => :green)
+    update_user_or_group(type, user_or_group_name, "new_#{type}_name".to_sym => new_name)
+  end
+
+  def update_path(type, user_or_group_name, new_path)
+    log(:info, "Update #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}`", :color => :green)
+    log(:info, "  set path=#{new_path}", :color => :green)
+    update_user_or_group(type, user_or_group_name, :new_path => new_path)
+  end
+
+  def update_user_or_group(type, user_or_group_name, params)
+    unless_dry_run do
+      params["#{type}_name".to_sym] = user_or_group_name
+      @iam.send("update_#{type}", params)
+    end
+  end
+
   def create_policy(type, user_or_group_name, policy_name, policy_document)
     log(:info, "Create #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}` > Policy `#{policy_name}`", :color => :cyan)
-    log(:info, "  #{policy_document.pretty_inspect.gsub("\n", "\n  ").strip}", :color => :cyan, :dry_run => false)
+    log(:info, "  #{policy_document.pretty_inspect.gsub("\n", "\n  ").strip}", :color => :cyan)
     put_policy(type, user_or_group_name, policy_name, policy_document)
   end
 
   def update_policy(type, user_or_group_name, policy_name, policy_document)
     log(:info, "Update #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}` > Policy `#{policy_name}`", :color => :green)
-    log(:info, "  #{policy_document.pretty_inspect.gsub("\n", "\n  ").strip}", :color => :green, :dry_run => false)
+    log(:info, "  #{policy_document.pretty_inspect.gsub("\n", "\n  ").strip}", :color => :green)
     put_policy(type, user_or_group_name, policy_name, policy_document)
   end
 
