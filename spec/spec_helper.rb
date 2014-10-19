@@ -68,6 +68,7 @@ def apply(cli = client)
     begin
       cli.apply(f.path)
     rescue Aws::IAM::Errors::EntityTemporarilyUnmodifiable
+      sleep 3
       retry
     end
   end
