@@ -213,10 +213,14 @@ class Miam::Driver
     new_instance_profile_attrs
   end
 
-  def delete_instance_profile(instance_profile_name, attrs)
+  def delete_instance_profile(instance_profile_name, attrs, roles_in_instance_profile)
     log(:info, "Delete InstanceProfile `#{instance_profile_name}`", :color => :red)
 
     unless_dry_run do
+      roles_in_instance_profile.each do |role_name|
+        @iam.remove_role_from_instance_profile(:instance_profile_name => instance_profile_name, :role_name => role_name)
+      end
+
       @iam.delete_instance_profile(:instance_profile_name => instance_profile_name)
     end
   end

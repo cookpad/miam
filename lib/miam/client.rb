@@ -8,7 +8,7 @@ class Miam::Client
   end
 
   def export
-    exported, group_users = Miam::Exporter.export(@iam, @options) do |export_options|
+    exported, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options) do |export_options|
       progress(*export_options.values_at(:progress_total, :progress))
     end
 
@@ -32,14 +32,14 @@ class Miam::Client
   def walk(file)
     expected = load_file(file)
 
-    actual, group_users = Miam::Exporter.export(@iam, @options) do |export_options|
+    actual, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options) do |export_options|
       progress(*export_options.values_at(:progress_total, :progress))
     end
 
     updated = walk_groups(expected[:groups], actual[:groups], actual[:users], group_users)
     updated = walk_users(expected[:users], actual[:users], group_users) || updated
-    updated = walk_instance_profiles(expected[:instance_profiles], actual[:instance_profiles]) || updated
-    updated = walk_roles(expected[:roles], actual[:roles]) || updated
+    updated = walk_instance_profiles(expected[:instance_profiles], actual[:instance_profiles], actual[:roles], instance_profile_roles) || updated
+    updated = walk_roles(expected[:roles], actual[:roles], instance_profile_roles) || updated
 
     if @options[:dry_run]
       false
@@ -170,7 +170,7 @@ class Miam::Client
     walk_policies(:group, group_name, expected_attrs[:policies], actual_attrs[:policies])
   end
 
-  def walk_roles(expected, actual)
+  def walk_roles(expected, actual, instance_profile_roles)
     updated = false
 
     expected.each do |role_name, expected_attrs|
@@ -187,6 +187,11 @@ class Miam::Client
 
     actual.each do |role_name, attrs|
       @driver.delete_role(role_name, attrs)
+
+      instance_profile_roles.each do |instance_profile_name, roles|
+        roles.delete(role_name)
+      end
+
       updated = true
     end
 
@@ -208,11 +213,11 @@ class Miam::Client
       remove_instance_profiles = actual_instance_profiles - expected_instance_profiles
 
       unless add_instance_profiles.empty?
-        @driver.add_user_to_instance_profiles(user_name, add_instance_profiles)
+        @driver.add_role_to_instance_profiles(role_name, add_instance_profiles)
       end
 
       unless remove_instance_profiles.empty?
-        @driver.remove_user_from_instance_profiles(user_name, remove_groups)
+        @driver.remove_role_from_instance_profiles(role_name, remove_instance_profiles)
       end
 
       updated = true
@@ -221,7 +226,7 @@ class Miam::Client
     updated
   end
 
-  def walk_instance_profiles(expected, actual)
+  def walk_instance_profiles(expected, actual, actual_roles, instance_profile_roles)
     updated = false
 
     expected.each do |instance_profile_name, expected_attrs|
@@ -237,7 +242,13 @@ class Miam::Client
     end
 
     actual.each do |instance_profile_name, attrs|
-      @driver.delete_instance_profile(instance_profile_name, attrs)
+      roles_in_instance_profile = instance_profile_roles.delete(instance_profile_name) || []
+      @driver.delete_instance_profile(instance_profile_name, attrs, roles_in_instance_profile)
+
+      actual_roles.each do |role_name, role_attrs|
+        role_attrs[:instance_profiles].delete(instance_profile_name)
+      end
+
       updated = true
     end
 

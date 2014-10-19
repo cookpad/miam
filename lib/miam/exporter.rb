@@ -14,6 +14,7 @@ class Miam::Exporter
     roles = list_roles
     instance_profiles = list_instance_profiles
     group_users = {}
+    instance_profile_roles = {}
 
     export_options = {
       :progress_total => (users.length + groups.length + roles.length + instance_profiles.length),
@@ -23,11 +24,11 @@ class Miam::Exporter
     expected = {
       :users => export_users(users, group_users, export_options, &block),
       :groups => export_groups(groups, export_options, &block),
-      :roles => export_roles(roles, export_options, &block),
+      :roles => export_roles(roles, instance_profile_roles, export_options, &block),
       :instance_profiles => export_instance_profiles(instance_profiles, export_options, &block),
     }
 
-    [expected, group_users]
+    [expected, group_users, instance_profile_roles]
   end
 
   private
@@ -127,15 +128,22 @@ class Miam::Exporter
     result
   end
 
-  def export_roles(roles, export_options = {})
+  def export_roles(roles, instance_profile_roles, export_options = {})
     result = {}
 
     roles.each do |role|
       role_name = role.role_name
 
+      instance_profiles = export_role_instance_profiles(role_name)
+
+      instance_profiles.each do |instance_profile_name|
+        instance_profile_roles[instance_profile_name] ||= []
+        instance_profile_roles[instance_profile_name] << role_name
+      end
+
       result[role_name] = {
         :path => role.path,
-        :instance_profiles => export_role_instance_profiles(role_name),
+        :instance_profiles => instance_profiles,
         :policies => export_role_policies(role_name),
       }
 
