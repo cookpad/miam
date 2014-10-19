@@ -8,6 +8,28 @@ class Miam::Driver
     @options = options
   end
 
+  def add_user_to_groups(user_name, group_names)
+    log(:info, "Update User `#{user_name}`", :color => :green)
+    log(:info, "  add groups=#{group_names.join(',')}", :color => :green)
+
+    unless_dry_run do
+      group_names.each do |group_name|
+        @iam.add_user_to_group(:group_name => group_name, :user_name => user_name)
+      end
+    end
+  end
+
+  def remove_user_from_groups(user_name, group_names)
+    log(:info, "Update User `#{user_name}`", :color => :green)
+    log(:info, "  remove groups=#{group_names.join(',')}", :color => :green)
+
+    unless_dry_run do
+      group_names.each do |group_name|
+        @iam.remove_user_from_group(:group_name => group_name, :user_name => user_name)
+      end
+    end
+  end
+
   def create_group(group_name, attrs)
     log(:info, "Create Group `#{group_name}`", :color => :cyan)
 

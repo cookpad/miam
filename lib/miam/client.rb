@@ -84,12 +84,12 @@ class Miam::Client
       add_groups = expected_groups - actual_groups
       remove_groups = actual_groups - expected_groups
 
-      if add_groups
-        # XXX: add_user_to_group
+      unless add_groups.empty?
+        @driver.add_user_to_groups(user_name, add_groups)
       end
 
-      if remove_groups
-        # XXX: remove_user_from_group
+      unless remove_groups.empty?
+        @driver.remove_user_from_groups(user_name, remove_groups)
       end
 
       updated = true
