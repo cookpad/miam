@@ -135,4 +135,88 @@ describe 'delete' do
       expect(export).to eq expected
     end
   end
+
+  context 'when delete user' do
+    let(:delete_user_dsl) do
+      <<-RUBY
+        user "mary", :path=>"/staff/" do
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        group "Admin", :path=>"/admin/" do
+          policy "Admin" do
+            {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+          end
+        end
+
+        group "SES", :path=>"/ses/" do
+          policy "ses-policy" do
+            {"Statement"=>
+              [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
+          end
+        end
+      RUBY
+    end
+
+    subject { client }
+
+    it do
+      updated = apply(subject) { delete_user_dsl }
+      expect(updated).to be_truthy
+      expected[:users].delete("bob")
+      expect(export).to eq expected
+    end
+  end
+
+  context 'when delete user_and_group' do
+    let(:delete_user_and_group_dsl) do
+      <<-RUBY
+        user "mary", :path=>"/staff/" do
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        group "Admin", :path=>"/admin/" do
+          policy "Admin" do
+            {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+          end
+        end
+      RUBY
+    end
+
+    context 'when apply' do
+      subject { client }
+
+      it do
+        updated = apply(subject) { delete_user_and_group_dsl }
+        expect(updated).to be_truthy
+        expected[:users].delete("bob")
+        expected[:groups].delete("SES")
+        expect(export).to eq expected
+      end
+    end
+
+    context 'when dry-run' do
+      subject { client(dry_run: true) }
+
+      it do
+        updated = apply(subject) { delete_user_and_group_dsl }
+        expect(updated).to be_falsey
+        expect(export).to eq expected
+      end
+    end
+  end
 end
