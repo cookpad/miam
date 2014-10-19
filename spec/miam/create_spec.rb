@@ -11,7 +11,7 @@ describe 'create' do
 
   context 'when create user and group' do
     let(:dsl) do
-      <<-EOS
+      <<-RUBY
         user "bob", :path=>"/devloper/" do
           login_profile :password_reset_required=>true
 
@@ -48,12 +48,12 @@ describe 'create' do
         end
 
         group "SES", :path=>"/ses/" do
-          policy "Admin" do
+          policy "ses-policy" do
             {"Statement"=>
               [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
           end
         end
-      EOS
+      RUBY
     end
 
     context 'when apply' do
@@ -92,7 +92,7 @@ describe 'create' do
              "SES"=>
               {:path=>"/ses/",
                :policies=>
-                {"Admin"=>
+                {"ses-policy"=>
                   {"Statement"=>
                     [{"Effect"=>"Allow",
                       "Action"=>"ses:SendRawEmail",
