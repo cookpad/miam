@@ -11,29 +11,39 @@ class Miam::Exporter
   def export(&block)
     users = list_users
     groups = list_groups
+    group_users = {}
 
     export_options = {
       :progress_total => (users.length + groups.length),
       :progress => 0,
     }
 
-    {
-      :users => export_users(users, export_options, &block),
+    expected = {
+      :users => export_users(users, group_users, export_options, &block),
       :groups => export_groups(groups, export_options, &block),
     }
+
+    [expected, group_users]
   end
 
   private
 
-  def export_users(users, export_options = {})
+  def export_users(users, group_users, export_options = {})
     result = {}
 
     users.each do |user|
       user_name = user.user_name
 
+      groups = export_user_groups(user_name)
+
+      groups.each do |group_name|
+        group_users[group_name] ||= []
+        group_users[group_name] << user_name
+      end
+
       result[user_name] = {
         :path => user.path,
-        :groups => export_user_groups(user_name),
+        :groups => groups,
         :policies => export_user_policies(user_name),
       }
 

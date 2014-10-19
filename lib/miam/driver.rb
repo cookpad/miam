@@ -8,6 +8,40 @@ class Miam::Driver
     @options = options
   end
 
+  def create_user(user_name, attrs)
+    log(:info, "Create User `#{user_name}`", :color => :cyan)
+
+    unless_dry_run do
+      params = {:user_name => user_name}
+      params[:path] = attrs[:path] if attrs[:path]
+      @iam.create_user(params)
+    end
+  end
+
+  def delete_user(user_name, attrs)
+    log(:info, "Delete User `#{user_name}`", :color => :red)
+
+    unless_dry_run do
+      if attrs[:login_profile]
+        @iam.delete_login_profile(:user_name => user_name)
+      end
+
+      attrs[:policies].keys.each do |policy_name|
+        @iam.delete_user_policy(:user_name => user_name, :policy_name => policy_name)
+      end
+
+      attrs[:groups].each do |group_name|
+        @iam.remove_user_from_group(:group_name => group_name, :user_name => user_name)
+      end
+
+      list_access_key_ids(user_name).each do |access_key_id|
+        @iam.delete_access_key(:user_name => user_name, :access_key_id => access_key_id)
+      end
+
+      @iam.delete_user(:user_name => user_name)
+    end
+  end
+
   def create_login_profile(user_name, attrs)
     log_attrs = attrs.dup
     log_attrs.delete(:password)
@@ -73,10 +107,18 @@ class Miam::Driver
     end
   end
 
-  def delete_group(group_name)
+  def delete_group(group_name, attrs, users_in_group)
     log(:info, "Delete Group `#{group_name}`", :color => :red)
 
     unless_dry_run do
+      attrs[:policies].keys.each do |policy_name|
+        @iam.delete_group_policy(:group_name => group_name, :policy_name => policy_name)
+      end
+
+      users_in_group.each do |user_name|
+        @iam.remove_user_from_group(:group_name => group_name, :user_name => user_name)
+      end
+
       @iam.delete_group(:group_name => group_name)
     end
   end
@@ -133,6 +175,14 @@ class Miam::Driver
       params["#{type}_name".to_sym] = user_or_group_name
       @iam.send("put_#{type}_policy", params)
     end
+  end
+
+  def list_access_key_ids(user_name)
+    @iam.list_access_keys(:user_name => user_name).map {|resp|
+      resp.access_key_metadata.map do |metadata|
+        metadata.access_key_id
+      end
+    }.flatten
   end
 
   private

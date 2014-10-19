@@ -8,7 +8,7 @@ class Miam::Client
   end
 
   def export
-    exported = Miam::Exporter.export(@iam, @options) do |export_options|
+    exported, group_users = Miam::Exporter.export(@iam, @options) do |export_options|
       progress(*export_options.values_at(:progress_total, :progress))
     end
 
@@ -24,16 +24,22 @@ class Miam::Client
   def walk(file)
     expected = load_file(file)
 
-    actual = Miam::Exporter.export(@iam, @options) do |export_options|
+    actual, group_users = Miam::Exporter.export(@iam, @options) do |export_options|
       progress(*export_options.values_at(:progress_total, :progress))
     end
 
-    updated = walk_users(expected[:users], actual[:users])
-    walk_groups(expected[:groups], actual[:groups]) || updated
+    updated = walk_groups(expected[:groups], actual[:groups], group_users)
+    updated = walk_users(expected[:users], actual[:users], group_users) || updated
+
+    if @options[:dry_run]
+      false
+    else
+      updated
+    end
   end
 
-  def walk_users(expected, actual)
-    updated = false
+  def walk_users(expected, actual, group_users)
+    updated = scan_rename(:user, expected, actual, group_users)
 
     expected.each do |user_name, expected_attrs|
       actual_attrs = actual.delete(user_name)
@@ -41,13 +47,14 @@ class Miam::Client
       if actual_attrs
         updated = walk_user(user_name, expected_attrs, actual_attrs) || updated
       else
-        # XXX: create user
+        @driver.create_user(user_name, expected_attrs)
+        # XXX: create key
         updated = true
       end
     end
 
     actual.each do |user_name, attrs|
-      # XXX: delete user
+      @driver.delete_user(user_name, attrs)
       updated = true
     end
 
@@ -107,8 +114,8 @@ class Miam::Client
     updated
   end
 
-  def walk_groups(expected, actual)
-    updated = scan_rename(:group, expected, actual)
+  def walk_groups(expected, actual, group_users)
+    updated = scan_rename(:group, expected, actual, group_users)
 
     expected.each do |group_name, expected_attrs|
       actual_attrs = actual.delete(group_name)
@@ -123,7 +130,8 @@ class Miam::Client
     end
 
     actual.each do |group_name, attrs|
-      @driver.delete_group(group_name)
+      users_in_group = group_users[group_name] || []
+      @driver.delete_group(group_name, attrs, users_in_group)
       updated = true
     end
 
@@ -134,7 +142,7 @@ class Miam::Client
     walk_policies(:group, group_name, expected_attrs[:policies], actual_attrs[:policies])
   end
 
-  def scan_rename(type, expected, actual)
+  def scan_rename(type, expected, actual, group_users)
     updated = false
 
     expected.each do |name, expected_attrs|
@@ -146,6 +154,21 @@ class Miam::Client
 
       @driver.update_name(type, renamed_from, name)
       actual[name] = actual_attrs
+
+      case type
+      when :user
+        group_users.each do |group_name, users|
+          users.each do |user_name|
+            if user_name == renamed_from
+              user_name.replace(name)
+            end
+          end
+        end
+      when :group
+        users = group_users.delete(renamed_from)
+        group_users[name] = users if users
+      end
+
       updated = true
     end
 
