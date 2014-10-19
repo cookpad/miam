@@ -84,7 +84,6 @@ describe 'delete' do
 
   before(:each) do
     apply { dsl }
-    wait_if_env
   end
 
   context 'when delete group' do

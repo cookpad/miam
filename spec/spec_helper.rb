@@ -19,11 +19,9 @@ Aws.config.update(
 RSpec.configure do |config|
   config.before(:each) do
     apply { '' }
-    wait_if_env
   end
 
   config.after(:all) do
-    wait_if_env
     apply { '' }
   end
 end
@@ -67,7 +65,11 @@ end
 
 def apply(cli = client)
   tempfile(yield) do |f|
-    cli.apply(f.path)
+    begin
+      cli.apply(f.path)
+    rescue Aws::IAM::Errors::EntityTemporarilyUnmodifiable
+      retry
+    end
   end
 end
 
@@ -78,8 +80,4 @@ end
 
 def if_debug
   yield if ENV['DEBUG'] == '1'
-end
-
-def wait_if_env
-  sleep ENV['TEST_WAIT'].to_i if ENV['TEST_WAIT']
 end

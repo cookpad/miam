@@ -84,7 +84,6 @@ describe 'update' do
 
   before(:each) do
     apply { dsl }
-    wait_if_env
   end
 
   context 'when no change' do
