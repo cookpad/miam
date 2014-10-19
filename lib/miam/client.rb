@@ -107,13 +107,13 @@ class Miam::Client
       if actual_attrs
         updated = walk_group(group_name, expected_attrs, actual_attrs) || updated
       else
-        # XXX: create group
+        @driver.create_group(group_name, expected_attrs)
         updated = true
       end
     end
 
     actual.each do |group_name, attrs|
-      # XXX: delete group
+      @driver.delete_group(group_name)
       updated = true
     end
 

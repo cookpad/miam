@@ -8,7 +8,23 @@ class Miam::Driver
     @options = options
   end
 
-  # XXX:
+  def create_group(group_name, attrs)
+    log(:info, "Create Group `#{group_name}`", :color => :cyan)
+
+    unless_dry_run do
+      params = {:group_name => group_name}
+      params[:path] = attrs[:path] if attrs[:path]
+      @iam.create_group(params)
+    end
+  end
+
+  def delete_group(group_name)
+    log(:info, "Delete Group `#{group_name}`", :color => :red)
+
+    unless_dry_run do
+      @iam.delete_group(:group_name => group_name)
+    end
+  end
 
   def create_policy(type, user_or_group_name, policy_name, policy_document)
     log(:info, "Create #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}` > Policy `#{policy_name}`", :color => :cyan)
