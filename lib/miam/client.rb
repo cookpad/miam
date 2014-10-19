@@ -54,17 +54,9 @@ class Miam::Client
   end
 
   def walk_user(user_name, expected_attrs, actual_attrs)
-    updated = walk_login_profile(
-                user_name,
-                expected_attrs[:login_profile],
-                actual_attrs[:login_profile])
-
-    updated = walk_user_groups(
-                user_name,
-                expected_attrs[:groups],
-                actual_attrs[:groups]) || updated
-
-
+    updated = walk_login_profile(user_name, expected_attrs[:login_profile], actual_attrs[:login_profile])
+    updated = walk_user_groups(user_name, expected_attrs[:groups], actual_attrs[:groups]) || updated
+    walk_policies(:user, user_name, expected_attrs[:policies], actual_attrs[:policies])
   end
 
   def walk_login_profile(user_name, expected_login_profile, actual_login_profile)
@@ -107,7 +99,29 @@ class Miam::Client
   end
 
   def walk_groups(expected, actual)
-    #p expected
+    updated = false
+
+    expected.each do |group_name, expected_attrs|
+      actual_attrs = actual.delete(group_name)
+
+      if actual_attrs
+        updated = walk_group(group_name, expected_attrs, actual_attrs) || updated
+      else
+        # XXX: create group
+        updated = true
+      end
+    end
+
+    actual.each do |group_name, attrs|
+      # XXX: delete group
+      updated = true
+    end
+
+    updated
+  end
+
+  def walk_group(group_name, expected_attrs, actual_attrs)
+    walk_policies(:group, group_name, expected_attrs[:policies], actual_attrs[:policies])
   end
 
   def walk_policies(type, user_or_group_name, expected_policies, actual_policies)
