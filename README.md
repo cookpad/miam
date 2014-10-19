@@ -63,7 +63,7 @@ Usage: miam [options]
 require 'other/iamfile'
 
 user "bob", :path => "/developer/" do
-  login_profile password_reset_required: true
+  login_profile :password_reset_required=>true
 
   groups(
     "Admin"
@@ -81,7 +81,7 @@ user "bob", :path => "/developer/" do
 end
 
 user "mary", :path => "/staff/" do
-  # login_profile password_reset_required: true
+  # login_profile :password_reset_required=>true
 
   groups(
     # no group
