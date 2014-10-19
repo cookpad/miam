@@ -1,12 +1,15 @@
 require 'cgi'
 require 'json'
+require 'logger'
 require 'pp'
+require 'singleton'
 
 require 'aws-sdk-core'
 require 'ruby-progressbar'
 require 'term/ansicolor'
 
 module Miam; end
+require 'miam/logger'
 require 'miam/client'
 require 'miam/driver'
 require 'miam/dsl'
