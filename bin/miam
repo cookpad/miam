@@ -2,6 +2,7 @@
 $: << File.expand_path("#{File.dirname __FILE__}/../lib")
 require 'rubygems'
 require 'miam'
+require 'fileutils'
 require 'optparse'
 
 Version = Miam::VERSION
@@ -29,22 +30,23 @@ ARGV.options do |opt|
     profile_name = nil
     credentials_path = nil
 
-    opt.on('-p', '--profile PROFILE_NAME')  {|v| profile_name               = v                                     }
-    opt.on(''  , '--credentials-path PATH') {|v| credentials_path           = v                                     }
-    opt.on('-k', '--access-key ACCESS_KEY') {|v| access_key                 = v                                     }
-    opt.on('-s', '--secret-key SECRET_KEY') {|v| secret_key                 = v                                     }
-    opt.on('-r', '--region REGION')         {|v| region                     = v                                     }
-    opt.on('-a', '--apply')                 {    mode                       = :apply                                }
-    opt.on('-f', '--file FILE')             {|v| file                       = v                                     }
-    opt.on('',   '--dry-run')               {    options[:dry_run]          = true                                  }
-    opt.on(''  , '--account-output FILE')   {|v| options[:password_manager] = Miam::PasswordManager.new(v, options) }
-    opt.on(''  , '--split')                 {    split                      = true                                  }
-    opt.on('-e', '--export')                {    mode                       = :export                               }
-    opt.on('-o', '--output FILE')           {|v| output_file                = v                                     }
-    opt.on(''  , '--split')                 {    split                      = true                                  }
-    opt.on(''  , '--no-color')              {    options[:color]            = false                                 }
-    opt.on(''  , '--no-progress')           {    options[:no_progress]      = true                                  }
-    opt.on(''  , '--debug')                 {    options[:debug]            = true                                  }
+    opt.on('-p', '--profile PROFILE_NAME')          {|v| profile_name                 = v                                     }
+    opt.on(''  , '--credentials-path PATH')         {|v| credentials_path             = v                                     }
+    opt.on('-k', '--access-key ACCESS_KEY')         {|v| access_key                   = v                                     }
+    opt.on('-s', '--secret-key SECRET_KEY')         {|v| secret_key                   = v                                     }
+    opt.on('-r', '--region REGION')                 {|v| region                       = v                                     }
+    opt.on('-a', '--apply')                         {    mode                         = :apply                                }
+    opt.on('-f', '--file FILE')                     {|v| file                         = v                                     }
+    opt.on(''  , '--dry-run')                       {    options[:dry_run]            = true                                  }
+    opt.on(''  , '--account-output FILE')           {|v| options[:password_manager]   = Miam::PasswordManager.new(v, options) }
+    opt.on('-e', '--export')                        {    mode                         = :export                               }
+    opt.on('-o', '--output FILE')                   {|v| output_file                  = v                                     }
+    opt.on(''  , '--split')                         {    split                        = true                                  }
+    opt.on(''  , '--split-more')                    {    split                        = :more                                 }
+    opt.on(''  , '--export-concurrency N', Integer) {|v| options[:export_concurrency] = v                                     }
+    opt.on(''  , '--no-color')                      {    options[:color]              = false                                 }
+    opt.on(''  , '--no-progress')                   {    options[:no_progress]        = true                                  }
+    opt.on(''  , '--debug')                         {    options[:debug]              = true                                  }
     opt.parse!
 
     aws_opts = {}
@@ -94,10 +96,26 @@ begin
       output_file = DEFAULT_FILENAME if output_file == '-'
       requires = []
 
-      client.export do |type, dsl|
+      client.export(:split_more => (split == :more)) do |args|
+        type, dsl = args.values_at(:type, :dsl)
         next if dsl.strip.empty?
-        iam_file = File.join(File.dirname(output_file), "#{type}.iam")
-        requires << iam_file
+
+        type = type.to_s
+        dir = File.dirname(output_file)
+
+        if split == :more
+          name = args[:name]
+          dir = File.join(dir, type)
+          FileUtils.mkdir_p(dir)
+          iam_filename =  "#{name}.iam"
+          iam_file = File.join(dir, iam_filename)
+          requires << File.join(type, iam_filename)
+        else
+          iam_filename = "#{type}.iam"
+          iam_file = File.join(dir, iam_filename)
+          requires << iam_filename
+        end
+
         logger.info("  write `#{iam_file}`")
 
         open(iam_file, 'wb') do |f|
@@ -109,7 +127,7 @@ begin
 
       open(output_file, 'wb') do |f|
         requires.each do |iam_file|
-          f.puts "require '#{File.basename iam_file}'"
+          f.puts "require '#{iam_file}'"
         end
       end
     else

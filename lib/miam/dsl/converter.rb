@@ -131,9 +131,13 @@ instance_profile #{instance_profile_name.inspect}, #{Miam::Utils.unbrace(instanc
   end
 
   def output_policies(policies)
-    policies.map {|policy_name, policy_document|
-      output_policy(policy_name, policy_document)
-    }.join("\n\n  ").strip
+    if policies.empty?
+      "# no policy"
+    else
+      policies.map {|policy_name, policy_document|
+        output_policy(policy_name, policy_document)
+      }.join("\n\n  ").strip
+    end
   end
 
   def output_policy(policy_name, policy_document)

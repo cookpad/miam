@@ -9,16 +9,24 @@ class Miam::Client
     @password_manager = options[:password_manager] || Miam::PasswordManager.new('-', options)
   end
 
-  def export
-    exported, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options) do |export_options|
-      progress(*export_options.values_at(:progress_total, :progress))
-    end
+  def export(export_options = {})
+    exported, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options)
 
     if block_given?
       [:users, :groups, :roles, :instance_profiles].each do |type|
         splitted = {:users => {}, :groups => {}, :roles => {}, :instance_profiles => {}}
-        splitted[type] = exported[type]
-        yield(type, Miam::DSL.convert(splitted, @options).strip)
+
+        if export_options[:split_more]
+          exported[type].each do |name, attrs|
+            more_splitted = splitted.dup
+            more_splitted[type] = {}
+            more_splitted[type][name] = attrs
+            yield(:type => type, :name => name, :dsl => Miam::DSL.convert(more_splitted, @options).strip)
+          end
+        else
+          splitted[type] = exported[type]
+          yield(:type => type, :dsl => Miam::DSL.convert(splitted, @options).strip)
+        end
       end
     else
       Miam::DSL.convert(exported, @options)
@@ -34,10 +42,7 @@ class Miam::Client
   def walk(file)
     expected = load_file(file)
 
-    actual, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options) do |export_options|
-      progress(*export_options.values_at(:progress_total, :progress))
-    end
-
+    actual, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options)
     updated = walk_groups(expected[:groups], actual[:groups], actual[:users], group_users)
     updated = walk_users(expected[:users], actual[:users], group_users) || updated
     updated = walk_instance_profiles(expected[:instance_profiles], actual[:instance_profiles], actual[:roles], instance_profile_roles) || updated
@@ -378,15 +383,5 @@ class Miam::Client
     else
       raise TypeError, "can't convert #{file} into File"
     end
-  end
-
-  def progress(total, n)
-    return if @options[:no_progress]
-
-    unless @progressbar
-      @progressbar = ProgressBar.create(:title => "Loading", :total => total, :output => $stderr)
-    end
-
-    @progressbar.progress = n
   end
 end
