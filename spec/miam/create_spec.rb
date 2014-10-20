@@ -59,6 +59,15 @@ describe 'create' do
             "my-instance-profile"
           )
 
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
           policy "role-policy" do
             {"Statement"=>
               [{"Action"=>
@@ -126,12 +135,21 @@ describe 'create' do
            :roles=>
             {"my-role"=>
               {:path=>"/any/",
+               :assume_role_policy_document=>
+                {"Version"=>"2012-10-17",
+                 "Statement"=>
+                  [{"Sid"=>"",
+                    "Effect"=>"Allow",
+                    "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                    "Action"=>"sts:AssumeRole"}]},
+               :instance_profiles=>["my-instance-profile"],
                :policies=>
                 {"role-policy"=>
                   {"Statement"=>
                     [{"Action"=>["s3:Get*", "s3:List*"],
                       "Effect"=>"Allow",
-                      "Resource"=>"*"}]}}}}}
+                      "Resource"=>"*"}]}}}},
+           :instance_profiles=>{"my-instance-profile"=>{:path=>"/profile/"}}}
         )
       end
     end
