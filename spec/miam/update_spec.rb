@@ -271,6 +271,32 @@ describe 'update' do
               [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
           end
         end
+
+        role "my-role", :path=>"/any/" do
+          instance_profiles(
+            "my-instance-profile"
+          )
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/"
       RUBY
     end
 
