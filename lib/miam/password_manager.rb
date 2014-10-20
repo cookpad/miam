@@ -1,4 +1,6 @@
 class Miam::PasswordManager
+  include Miam::Logger::Helper
+
   def initialize(output, options = {})
     @output = output
     @options = options
@@ -11,6 +13,8 @@ class Miam::PasswordManager
   end
 
   def puts_password(user, type, password)
+    log(:info, "User `#{user}` > `#{type}`: put password to `#{@output}`")
+
     open_output do |f|
       f.puts("#{user},#{type},#{password}")
     end
