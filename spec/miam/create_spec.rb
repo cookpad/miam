@@ -78,16 +78,7 @@ describe 'create' do
           end
         end
 
-        instance_profile "my-instance-profile", :path=>"/profile/" do
-          policy "instance-profile-policy" do
-            {"Statement"=>
-              [{"Action"=>
-                 ["s3:Get*",
-                  "s3:List*"],
-                "Effect"=>"Allow",
-                "Resource"=>"*"}]}
-          end
-        end
+        instance_profile "my-instance-profile", :path=>"/profile/"
       RUBY
     end
 
