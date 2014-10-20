@@ -423,7 +423,6 @@ describe 'delete' do
     end
   end
 
-
   context 'when delete role' do
     let(:delete_role_dsl) do
       <<-RUBY
@@ -479,6 +478,64 @@ describe 'delete' do
       updated = apply(subject) { delete_role_dsl }
       expect(updated).to be_truthy
       expected[:roles].delete("my-role")
+      expect(export).to eq expected
+    end
+  end
+
+  context 'when delete role and instance_profile' do
+    let(:delete_role_and_instance_profile_dsl) do
+      <<-RUBY
+        user "bob", :path=>"/devloper/" do
+          login_profile :password_reset_required=>true
+
+          groups(
+            "Admin",
+            "SES"
+          )
+
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        user "mary", :path=>"/staff/" do
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        group "Admin", :path=>"/admin/" do
+          policy "Admin" do
+            {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+          end
+        end
+
+        group "SES", :path=>"/ses/" do
+          policy "ses-policy" do
+            {"Statement"=>
+              [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
+          end
+        end
+      RUBY
+    end
+
+    subject { client }
+
+    it do
+      updated = apply(subject) { delete_role_and_instance_profile_dsl }
+      expect(updated).to be_truthy
+      expected[:roles].delete("my-role")
+      expected[:instance_profiles].delete("my-instance-profile")
       expect(export).to eq expected
     end
   end
