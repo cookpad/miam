@@ -42,6 +42,32 @@ describe 'delete' do
             [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
         end
       end
+
+      role "my-role", :path=>"/any/" do
+        instance_profiles(
+          "my-instance-profile"
+        )
+
+        assume_role_policy_document do
+          {"Version"=>"2012-10-17",
+           "Statement"=>
+            [{"Sid"=>"",
+              "Effect"=>"Allow",
+              "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+              "Action"=>"sts:AssumeRole"}]}
+        end
+
+        policy "role-policy" do
+          {"Statement"=>
+            [{"Action"=>
+               ["s3:Get*",
+                "s3:List*"],
+              "Effect"=>"Allow",
+              "Resource"=>"*"}]}
+        end
+      end
+
+      instance_profile "my-instance-profile", :path=>"/profile/"
     RUBY
   end
 
@@ -79,7 +105,25 @@ describe 'delete' do
             {"Statement"=>
               [{"Effect"=>"Allow",
                 "Action"=>"ses:SendRawEmail",
-                "Resource"=>"*"}]}}}}}
+                "Resource"=>"*"}]}}}},
+     :roles=>
+      {"my-role"=>
+        {:path=>"/any/",
+         :assume_role_policy_document=>
+          {"Version"=>"2012-10-17",
+           "Statement"=>
+            [{"Sid"=>"",
+              "Effect"=>"Allow",
+              "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+              "Action"=>"sts:AssumeRole"}]},
+         :instance_profiles=>["my-instance-profile"],
+         :policies=>
+          {"role-policy"=>
+            {"Statement"=>
+              [{"Action"=>["s3:Get*", "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}}}},
+     :instance_profiles=>{"my-instance-profile"=>{:path=>"/profile/"}}}
   end
 
   before(:each) do
@@ -122,6 +166,32 @@ describe 'delete' do
             {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
           end
         end
+
+        role "my-role", :path=>"/any/" do
+          instance_profiles(
+            "my-instance-profile"
+          )
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/"
       RUBY
     end
 
@@ -162,6 +232,32 @@ describe 'delete' do
               [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
           end
         end
+
+        role "my-role", :path=>"/any/" do
+          instance_profiles(
+            "my-instance-profile"
+          )
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/"
       RUBY
     end
 
@@ -194,6 +290,32 @@ describe 'delete' do
             {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
           end
         end
+
+        role "my-role", :path=>"/any/" do
+          instance_profiles(
+            "my-instance-profile"
+          )
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/"
       RUBY
     end
 
@@ -217,6 +339,204 @@ describe 'delete' do
         expect(updated).to be_falsey
         expect(export).to eq expected
       end
+    end
+  end
+
+  context 'when delete instance_profile' do
+    let(:delete_instance_profiles_dsl) do
+      <<-RUBY
+        user "bob", :path=>"/devloper/" do
+          login_profile :password_reset_required=>true
+
+          groups(
+            "Admin",
+            "SES"
+          )
+
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        user "mary", :path=>"/staff/" do
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        group "Admin", :path=>"/admin/" do
+          policy "Admin" do
+            {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+          end
+        end
+
+        group "SES", :path=>"/ses/" do
+          policy "ses-policy" do
+            {"Statement"=>
+              [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
+          end
+        end
+
+        role "my-role", :path=>"/any/" do
+          instance_profiles(
+          )
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+      RUBY
+    end
+
+    subject { client }
+
+    it do
+      updated = apply(subject) { delete_instance_profiles_dsl }
+      expect(updated).to be_truthy
+      expected[:roles]["my-role"][:instance_profiles] = []
+      expected[:instance_profiles].delete("my-instance-profile")
+      expect(export).to eq expected
+    end
+  end
+
+  context 'when delete role' do
+    let(:delete_role_dsl) do
+      <<-RUBY
+        user "bob", :path=>"/devloper/" do
+          login_profile :password_reset_required=>true
+
+          groups(
+            "Admin",
+            "SES"
+          )
+
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        user "mary", :path=>"/staff/" do
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        group "Admin", :path=>"/admin/" do
+          policy "Admin" do
+            {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+          end
+        end
+
+        group "SES", :path=>"/ses/" do
+          policy "ses-policy" do
+            {"Statement"=>
+              [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/"
+      RUBY
+    end
+
+    subject { client }
+
+    it do
+      updated = apply(subject) { delete_role_dsl }
+      expect(updated).to be_truthy
+      expected[:roles].delete("my-role")
+      expect(export).to eq expected
+    end
+  end
+
+  context 'when delete role and instance_profile' do
+    let(:delete_role_and_instance_profile_dsl) do
+      <<-RUBY
+        user "bob", :path=>"/devloper/" do
+          login_profile :password_reset_required=>true
+
+          groups(
+            "Admin",
+            "SES"
+          )
+
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        user "mary", :path=>"/staff/" do
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        group "Admin", :path=>"/admin/" do
+          policy "Admin" do
+            {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+          end
+        end
+
+        group "SES", :path=>"/ses/" do
+          policy "ses-policy" do
+            {"Statement"=>
+              [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
+          end
+        end
+      RUBY
+    end
+
+    subject { client }
+
+    it do
+      updated = apply(subject) { delete_role_and_instance_profile_dsl }
+      expect(updated).to be_truthy
+      expected[:roles].delete("my-role")
+      expected[:instance_profiles].delete("my-instance-profile")
+      expect(export).to eq expected
     end
   end
 end

@@ -12,8 +12,8 @@ require 'tempfile'
 require 'miam'
 
 Aws.config.update(
-  access_key_id: ENV['MIAM_TEST_ACCESS_KEY_ID'],
-  secret_access_key: ENV['MIAM_TEST_SECRET_ACCESS_KEY']
+  access_key_id: ENV['MIAM_TEST_ACCESS_KEY_ID'] || 'scott',
+  secret_access_key: ENV['MIAM_TEST_SECRET_ACCESS_KEY'] || 'tiger'
 )
 
 RSpec.configure do |config|
@@ -28,10 +28,11 @@ end
 
 def client(user_options = {})
   options = {
-    password_manager: Miam::PasswordManager.new('/dev/null'),
     logger: Logger.new('/dev/null'),
     no_progress: true
   }
+
+  options[:password_manager] = Miam::PasswordManager.new('/dev/null', options)
 
   if_debug do
     logger = Miam::Logger.instance

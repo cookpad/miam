@@ -16,12 +16,11 @@ class Miam::Logger < ::Logger
   end
 
   module Helper
-    def log(level, message, options = {})
-      options = (@options || {}).merge(options)
+    def log(level, message, log_options = {})
       message = "[#{level.to_s.upcase}] #{message}" unless level == :info
-      message << ' (dry-run)' if options[:dry_run]
-      message = message.send(options[:color]) if options[:color]
-      logger = options[:logger] || Miam::Logger.instance
+      message << ' (dry-run)' if @options[:dry_run]
+      message = message.send(log_options[:color]) if log_options[:color]
+      logger = @options[:logger] || Miam::Logger.instance
       logger.send(level, message)
     end
   end

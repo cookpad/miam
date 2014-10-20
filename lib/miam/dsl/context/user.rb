@@ -1,6 +1,6 @@
 class Miam::DSL::Context::User
   def initialize(name, &block)
-    @name = name
+    @user_name = name
     @result = {:groups => [], :policies => {}}
     instance_eval(&block)
   end
@@ -21,13 +21,13 @@ class Miam::DSL::Context::User
     name = name.to_s
 
     if @result[:policies][name]
-      raise "User `#{name}` > Policy `#{name}`: already defined"
+      raise "User `#{@user_name}` > Policy `#{name}`: already defined"
     end
 
     policy_document = yield
 
     unless policy_document.kind_of?(Hash)
-      raise "User `#{name}` > Policy `#{name}`: wrong argument type #{policy_document.class} (expected Hash)"
+      raise "User `#{@user_name}` > Policy `#{name}`: wrong argument type #{policy_document.class} (expected Hash)"
     end
 
     @result[:policies][name] = policy_document

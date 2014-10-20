@@ -1,4 +1,6 @@
 class Miam::Client
+  include Miam::Logger::Helper
+
   def initialize(options = {})
     @options = options
     aws_config = options.delete(:aws_config) || {}
@@ -8,15 +10,15 @@ class Miam::Client
   end
 
   def export
-    exported, group_users = Miam::Exporter.export(@iam, @options) do |export_options|
+    exported, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options) do |export_options|
       progress(*export_options.values_at(:progress_total, :progress))
     end
 
     if block_given?
-      [:users, :groups].each do |users_or_groups|
-        splitted = {:users => {}, :groups => {}}
-        splitted[users_or_groups] = exported[users_or_groups]
-        yield(users_or_groups, Miam::DSL.convert(splitted, @options).strip)
+      [:users, :groups, :roles, :instance_profiles].each do |type|
+        splitted = {:users => {}, :groups => {}, :roles => {}, :instance_profiles => {}}
+        splitted[type] = exported[type]
+        yield(type, Miam::DSL.convert(splitted, @options).strip)
       end
     else
       Miam::DSL.convert(exported, @options)
@@ -32,12 +34,14 @@ class Miam::Client
   def walk(file)
     expected = load_file(file)
 
-    actual, group_users = Miam::Exporter.export(@iam, @options) do |export_options|
+    actual, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options) do |export_options|
       progress(*export_options.values_at(:progress_total, :progress))
     end
 
     updated = walk_groups(expected[:groups], actual[:groups], actual[:users], group_users)
     updated = walk_users(expected[:users], actual[:users], group_users) || updated
+    updated = walk_instance_profiles(expected[:instance_profiles], actual[:instance_profiles], actual[:roles], instance_profile_roles) || updated
+    updated = walk_roles(expected[:roles], actual[:roles], instance_profile_roles) || updated
 
     if @options[:dry_run]
       false
@@ -166,6 +170,125 @@ class Miam::Client
 
   def walk_group(group_name, expected_attrs, actual_attrs)
     walk_policies(:group, group_name, expected_attrs[:policies], actual_attrs[:policies])
+  end
+
+  def walk_roles(expected, actual, instance_profile_roles)
+    updated = false
+
+    expected.each do |role_name, expected_attrs|
+      actual_attrs = actual.delete(role_name)
+
+      if actual_attrs
+        updated = walk_role(role_name, expected_attrs, actual_attrs) || updated
+      else
+        actual_attrs = @driver.create_role(role_name, expected_attrs)
+        walk_role(role_name, expected_attrs, actual_attrs)
+        updated = true
+      end
+    end
+
+    actual.each do |role_name, attrs|
+      instance_profile_names = []
+
+      instance_profile_roles.each do |instance_profile_name, roles|
+        if roles.include?(role_name)
+          instance_profile_names << instance_profile_name
+        end
+      end
+
+      @driver.delete_role(role_name, instance_profile_names, attrs)
+
+      instance_profile_roles.each do |instance_profile_name, roles|
+        roles.delete(role_name)
+      end
+
+      updated = true
+    end
+
+    updated
+  end
+
+  def walk_role(role_name, expected_attrs, actual_attrs)
+    if expected_attrs.values_at(:path) != actual_attrs.values_at(:path)
+      log(:warn, "Role `#{role_name}`: 'path' cannot be updated", :color => :yellow)
+    end
+
+    updated = walk_assume_role_policy(role_name, expected_attrs[:assume_role_policy_document], actual_attrs[:assume_role_policy_document])
+    updated = walk_role_instance_profiles(role_name, expected_attrs[:instance_profiles], actual_attrs[:instance_profiles]) || updated
+    walk_policies(:role, role_name, expected_attrs[:policies], actual_attrs[:policies]) || updated
+  end
+
+  def walk_assume_role_policy(role_name, expected_assume_role_policy, actual_assume_role_policy)
+    updated = false
+
+    if expected_assume_role_policy != actual_assume_role_policy
+      @driver.update_assume_role_policy(role_name, expected_assume_role_policy)
+      updated = true
+    end
+
+    updated
+  end
+
+  def walk_role_instance_profiles(role_name, expected_instance_profiles, actual_instance_profiles)
+    expected_instance_profiles = expected_instance_profiles.sort
+    actual_instance_profiles = actual_instance_profiles.sort
+    updated = false
+
+    if expected_instance_profiles != actual_instance_profiles
+      add_instance_profiles = expected_instance_profiles - actual_instance_profiles
+      remove_instance_profiles = actual_instance_profiles - expected_instance_profiles
+
+      unless add_instance_profiles.empty?
+        @driver.add_role_to_instance_profiles(role_name, add_instance_profiles)
+      end
+
+      unless remove_instance_profiles.empty?
+        @driver.remove_role_from_instance_profiles(role_name, remove_instance_profiles)
+      end
+
+      updated = true
+    end
+
+    updated
+  end
+
+  def walk_instance_profiles(expected, actual, actual_roles, instance_profile_roles)
+    updated = false
+
+    expected.each do |instance_profile_name, expected_attrs|
+      actual_attrs = actual.delete(instance_profile_name)
+
+      if actual_attrs
+        updated = walk_instance_profile(instance_profile_name, expected_attrs, actual_attrs) || updated
+      else
+        actual_attrs = @driver.create_instance_profile(instance_profile_name, expected_attrs)
+        walk_instance_profile(instance_profile_name, expected_attrs, actual_attrs)
+        updated = true
+      end
+    end
+
+    actual.each do |instance_profile_name, attrs|
+      roles_in_instance_profile = instance_profile_roles.delete(instance_profile_name) || []
+      @driver.delete_instance_profile(instance_profile_name, attrs, roles_in_instance_profile)
+
+      actual_roles.each do |role_name, role_attrs|
+        role_attrs[:instance_profiles].delete(instance_profile_name)
+      end
+
+      updated = true
+    end
+
+    updated
+  end
+
+  def walk_instance_profile(instance_profile_name, expected_attrs, actual_attrs)
+    updated = false
+
+    if expected_attrs != actual_attrs
+      log(:warn, "InstanceProfile `#{instance_profile_name}`: 'path' cannot be updated", :color => :yellow)
+    end
+
+    updated
   end
 
   def scan_rename(type, expected, actual, group_users)

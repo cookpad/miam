@@ -10,7 +10,7 @@ class Miam::DSL::Context
   def initialize(path, options = {}, &block)
     @path = path
     @options = options
-    @result = {:users => {}, :groups => {}}
+    @result = {:users => {}, :groups => {}, :roles => {}, :instance_profiles => {}}
     instance_eval(&block)
   end
 
@@ -48,5 +48,26 @@ class Miam::DSL::Context
 
     attrs = Miam::DSL::Context::Group.new(name, &block).result
     @result[:groups][name] = group_options.merge(attrs)
+  end
+
+  def role(name, role_options = {}, &block)
+    name = name.to_s
+
+    if @result[:roles][name]
+      raise "Role `#{name}` is already defined"
+    end
+
+    attrs = Miam::DSL::Context::Role.new(name, &block).result
+    @result[:roles][name] = role_options.merge(attrs)
+  end
+
+  def instance_profile(name, instance_profile_options = {}, &block)
+    name = name.to_s
+
+    if @result[:instance_profiles][name]
+      raise "instance_profile `#{name}` is already defined"
+    end
+
+    @result[:instance_profiles][name] = instance_profile_options
   end
 end

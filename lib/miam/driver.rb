@@ -151,6 +151,106 @@ class Miam::Driver
     end
   end
 
+  def create_role(role_name, attrs)
+    log(:info, "Create Role `#{role_name}`", :color => :cyan)
+    assume_role_policy_document = attrs.fetch(:assume_role_policy_document)
+
+    unless_dry_run do
+      params = {
+        :role_name => role_name,
+        :assume_role_policy_document => encode_document(assume_role_policy_document),
+      }
+
+      params[:path] = attrs[:path] if attrs[:path]
+      @iam.create_role(params)
+    end
+
+    new_role_attrs = {
+      :instance_profiles => [],
+      :assume_role_policy_document => assume_role_policy_document,
+      :policies => {}
+    }
+
+    new_role_attrs[:path] = attrs[:path] if attrs[:path]
+    new_role_attrs
+  end
+
+  def delete_role(role_name, instance_profile_names, attrs)
+    log(:info, "Delete Role `#{role_name}`", :color => :red)
+
+    unless_dry_run do
+      attrs[:policies].keys.each do |policy_name|
+        @iam.delete_role_policy(:role_name => role_name, :policy_name => policy_name)
+      end
+
+      instance_profile_names.each do |instance_profile_name|
+        @iam.remove_role_from_instance_profile(:instance_profile_name => instance_profile_name, :role_name => role_name)
+      end
+
+      @iam.delete_role(:role_name => role_name)
+    end
+  end
+
+  def add_role_to_instance_profiles(role_name, instance_profile_names)
+    log(:info, "Update Role `#{role_name}`", :color => :green)
+    log(:info, "  add instance_profiles=#{instance_profile_names.join(',')}", :color => :green)
+
+    unless_dry_run do
+      instance_profile_names.each do |instance_profile_name|
+        @iam.add_role_to_instance_profile(:instance_profile_name => instance_profile_name, :role_name => role_name)
+      end
+    end
+  end
+
+  def remove_role_from_instance_profiles(role_name, instance_profile_names)
+    log(:info, "Update Role `#{role_name}`", :color => :green)
+    log(:info, "  remove instance_profiles=#{instance_profile_names.join(',')}", :color => :green)
+
+    unless_dry_run do
+      instance_profile_names.each do |instance_profile_name|
+        @iam.remove_role_from_instance_profile(:instance_profile_name => instance_profile_name, :role_name => role_name)
+      end
+    end
+  end
+
+  def update_assume_role_policy(role_name, policy_document)
+    log(:info, "Update Role `#{role_name}` > AssumeRolePolicy", :color => :green)
+    log(:info, "  #{policy_document.pretty_inspect.gsub("\n", "\n  ").strip}", :color => :green)
+
+    unless_dry_run do
+      @iam.update_assume_role_policy(
+        :role_name => role_name,
+        :policy_document => encode_document(policy_document),
+      )
+    end
+  end
+
+  def create_instance_profile(instance_profile_name, attrs)
+    log(:info, "Create InstanceIrofile `#{instance_profile_name}`", :color => :cyan)
+
+    unless_dry_run do
+      params = {:instance_profile_name => instance_profile_name}
+      params[:path] = attrs[:path] if attrs[:path]
+      @iam.create_instance_profile(params)
+    end
+
+    new_instance_profile_attrs = {}
+    new_instance_profile_attrs[:path] = attrs[:path] if attrs[:path]
+    new_instance_profile_attrs
+  end
+
+  def delete_instance_profile(instance_profile_name, attrs, roles_in_instance_profile)
+    log(:info, "Delete InstanceProfile `#{instance_profile_name}`", :color => :red)
+
+    unless_dry_run do
+      roles_in_instance_profile.each do |role_name|
+        @iam.remove_role_from_instance_profile(:instance_profile_name => instance_profile_name, :role_name => role_name)
+      end
+
+      @iam.delete_instance_profile(:instance_profile_name => instance_profile_name)
+    end
+  end
+
   def update_name(type, user_or_group_name, new_name)
     log(:info, "Update #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}`", :color => :green)
     log(:info, "  set name=#{new_name}", :color => :green)

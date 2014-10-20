@@ -11,19 +11,24 @@ class Miam::Exporter
   def export(&block)
     users = list_users
     groups = list_groups
+    roles = list_roles
+    instance_profiles = list_instance_profiles
     group_users = {}
+    instance_profile_roles = {}
 
     export_options = {
-      :progress_total => (users.length + groups.length),
+      :progress_total => (users.length + groups.length + roles.length + instance_profiles.length),
       :progress => 0,
     }
 
     expected = {
       :users => export_users(users, group_users, export_options, &block),
       :groups => export_groups(groups, export_options, &block),
+      :roles => export_roles(roles, instance_profile_roles, export_options, &block),
+      :instance_profiles => export_instance_profiles(instance_profiles, export_options, &block),
     }
 
-    [expected, group_users]
+    [expected, group_users, instance_profile_roles]
   end
 
   private
@@ -123,6 +128,82 @@ class Miam::Exporter
     result
   end
 
+  def export_roles(roles, instance_profile_roles, export_options = {})
+    result = {}
+
+    roles.each do |role|
+      role_name = role.role_name
+
+      instance_profiles = export_role_instance_profiles(role_name)
+
+      instance_profiles.each do |instance_profile_name|
+        instance_profile_roles[instance_profile_name] ||= []
+        instance_profile_roles[instance_profile_name] << role_name
+      end
+
+      document = CGI.unescape(role.assume_role_policy_document)
+
+      result[role_name] = {
+        :path => role.path,
+        :assume_role_policy_document => JSON.parse(document),
+        :instance_profiles => instance_profiles,
+        :policies => export_role_policies(role_name),
+      }
+
+      export_options[:progress] += 1
+      yield(export_options) if block_given?
+    end
+
+    result
+  end
+
+  def export_role_instance_profiles(role_name)
+    @iam.list_instance_profiles_for_role(:role_name => role_name).map {|resp|
+      resp.instance_profiles.map do |instance_profile|
+        instance_profile.instance_profile_name
+      end
+    }.flatten
+  end
+
+  def export_role_policies(role_name)
+    result = {}
+
+    @iam.list_role_policies(:role_name => role_name).each do |resp|
+      resp.policy_names.map do |policy_name|
+        policy = @iam.get_role_policy(:role_name => role_name, :policy_name => policy_name)
+        document = CGI.unescape(policy.policy_document)
+        result[policy_name] = JSON.parse(document)
+      end
+    end
+
+    result
+  end
+
+  def export_instance_profiles(instance_profiles, export_options = {})
+    result = {}
+
+    instance_profiles.each do |instance_profile|
+      instance_profile_name = instance_profile.instance_profile_name
+
+      result[instance_profile_name] = {
+        :path => instance_profile.path,
+      }
+
+      export_options[:progress] += 1
+      yield(export_options) if block_given?
+    end
+
+    result
+  end
+
+  def export_role_instance_profiles(role_name)
+    @iam.list_instance_profiles_for_role(:role_name => role_name).map {|resp|
+      resp.instance_profiles.map do |instance_profile|
+        instance_profile.instance_profile_name
+      end
+    }.flatten
+  end
+
   def list_users
     @iam.list_users.map {|resp|
       resp.users.to_a
@@ -132,6 +213,18 @@ class Miam::Exporter
   def list_groups
     @iam.list_groups.map {|resp|
       resp.groups.to_a
+    }.flatten
+  end
+
+  def list_roles
+    @iam.list_roles.map {|resp|
+      resp.roles.to_a
+    }.flatten
+  end
+
+  def list_instance_profiles
+    @iam.list_instance_profiles.map {|resp|
+      resp.instance_profiles.to_a
     }.flatten
   end
 end

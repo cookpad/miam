@@ -42,6 +42,32 @@ describe 'update' do
             [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
         end
       end
+
+      role "my-role", :path=>"/any/" do
+        instance_profiles(
+          "my-instance-profile"
+        )
+
+        assume_role_policy_document do
+          {"Version"=>"2012-10-17",
+           "Statement"=>
+            [{"Sid"=>"",
+              "Effect"=>"Allow",
+              "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+              "Action"=>"sts:AssumeRole"}]}
+        end
+
+        policy "role-policy" do
+          {"Statement"=>
+            [{"Action"=>
+               ["s3:Get*",
+                "s3:List*"],
+              "Effect"=>"Allow",
+              "Resource"=>"*"}]}
+        end
+      end
+
+      instance_profile "my-instance-profile", :path=>"/profile/"
     RUBY
   end
 
@@ -79,7 +105,25 @@ describe 'update' do
             {"Statement"=>
               [{"Effect"=>"Allow",
                 "Action"=>"ses:SendRawEmail",
-                "Resource"=>"*"}]}}}}}
+                "Resource"=>"*"}]}}}},
+     :roles=>
+      {"my-role"=>
+        {:path=>"/any/",
+         :assume_role_policy_document=>
+          {"Version"=>"2012-10-17",
+           "Statement"=>
+            [{"Sid"=>"",
+              "Effect"=>"Allow",
+              "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+              "Action"=>"sts:AssumeRole"}]},
+         :instance_profiles=>["my-instance-profile"],
+         :policies=>
+          {"role-policy"=>
+            {"Statement"=>
+              [{"Action"=>["s3:Get*", "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}}}},
+     :instance_profiles=>{"my-instance-profile"=>{:path=>"/profile/"}}}
   end
 
   before(:each) do
@@ -141,6 +185,33 @@ describe 'update' do
               [{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
           end
         end
+
+        role "my-role", :path=>"/any/" do
+          instance_profiles(
+            "my-instance-profile"
+          )
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:Put*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/"
       RUBY
     end
 
@@ -151,6 +222,7 @@ describe 'update' do
       expect(updated).to be_truthy
       expected[:users]["mary"][:policies]["S3"]["Statement"][0]["Action"] = ["s3:Get*", "s3:Put*", "s3:List*"]
       expected[:groups]["SES"][:policies]["ses-policy"]["Statement"][0]["Action"] = "*"
+      expected[:roles]["my-role"][:policies]["role-policy"]["Statement"][0]["Action"] = ["s3:Get*", "s3:Put*", "s3:List*"]
       expect(export).to eq expected
     end
   end
@@ -199,6 +271,32 @@ describe 'update' do
               [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
           end
         end
+
+        role "my-role", :path=>"/any/" do
+          instance_profiles(
+            "my-instance-profile"
+          )
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/"
       RUBY
     end
 
@@ -209,6 +307,178 @@ describe 'update' do
       expect(updated).to be_truthy
       expected[:users]["mary"][:path] = "/xstaff/"
       expected[:groups]["SES"][:path] = "/ses/ses/"
+      expect(export).to eq expected
+    end
+  end
+
+  context 'when update path (role, instance_profile)' do
+    let(:cannot_update_path_dsl) do
+      <<-RUBY
+        user "bob", :path=>"/devloper/" do
+          login_profile :password_reset_required=>true
+
+          groups(
+            "Admin",
+            "SES"
+          )
+
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        user "mary", :path=>"/staff/" do
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        group "Admin", :path=>"/admin/" do
+          policy "Admin" do
+            {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+          end
+        end
+
+        group "SES", :path=>"/ses/" do
+          policy "ses-policy" do
+            {"Statement"=>
+              [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
+          end
+        end
+
+        role "my-role", :path=>"/any/xxx/" do
+          instance_profiles(
+            "my-instance-profile"
+          )
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/xxx/"
+      RUBY
+    end
+
+    let(:logger) do
+      logger = Logger.new('/dev/null')
+      expect(logger).to receive(:warn).with("[WARN] Role `my-role`: 'path' cannot be updated")
+      expect(logger).to receive(:warn).with("[WARN] InstanceProfile `my-instance-profile`: 'path' cannot be updated")
+      logger
+    end
+
+    subject { client(logger: logger) }
+
+    it do
+      updated = apply(subject) { cannot_update_path_dsl }
+      expect(updated).to be_falsey
+      expect(export).to eq expected
+    end
+  end
+
+  context 'when update assume_role_policy' do
+    let(:update_assume_role_policy_dsl) do
+      <<-RUBY
+        user "bob", :path=>"/devloper/" do
+          login_profile :password_reset_required=>true
+
+          groups(
+            "Admin",
+            "SES"
+          )
+
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        user "mary", :path=>"/staff/" do
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        group "Admin", :path=>"/admin/" do
+          policy "Admin" do
+            {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+          end
+        end
+
+        group "SES", :path=>"/ses/" do
+          policy "ses-policy" do
+            {"Statement"=>
+              [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
+          end
+        end
+
+        role "my-role", :path=>"/any/" do
+          instance_profiles(
+            "my-instance-profile"
+          )
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"SID",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/"
+      RUBY
+    end
+
+    subject { client }
+
+    it do
+      updated = apply(subject) { update_assume_role_policy_dsl }
+      expect(updated).to be_truthy
+      expected[:roles]["my-role"][:assume_role_policy_document]["Statement"][0]["Sid"] = "SID"
       expect(export).to eq expected
     end
   end
@@ -261,6 +531,32 @@ describe 'update' do
               [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
           end
         end
+
+        role "my-role", :path=>"/any/" do
+          instance_profiles(
+            "my-instance-profile"
+          )
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/"
       RUBY
     end
 
@@ -319,6 +615,32 @@ describe 'update' do
               [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
           end
         end
+
+        role "my-role", :path=>"/any/" do
+          instance_profiles(
+            "my-instance-profile"
+          )
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/"
       RUBY
     end
 
@@ -374,6 +696,32 @@ describe 'update' do
               [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
           end
         end
+
+        role "my-role", :path=>"/any/" do
+          instance_profiles(
+            "my-instance-profile"
+          )
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/"
       RUBY
     end
 
@@ -418,6 +766,23 @@ describe 'update' do
 
         group "SES", :path=>"/ses/" do
         end
+
+        role "my-role", :path=>"/any/" do
+          instance_profiles(
+            "my-instance-profile"
+          )
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/"
       RUBY
     end
 
@@ -428,6 +793,92 @@ describe 'update' do
       expect(updated).to be_truthy
       expected[:users]["bob"][:policies].delete("S3")
       expected[:groups]["SES"][:policies].delete("ses-policy")
+      expected[:roles]["my-role"][:policies].delete("role-policy")
+      expect(export).to eq expected
+    end
+  end
+
+  context 'when update instance_profiles' do
+    let(:update_instance_profiles_dsl) do
+      <<-RUBY
+        user "bob", :path=>"/devloper/" do
+          login_profile :password_reset_required=>true
+
+          groups(
+            "Admin",
+            "SES"
+          )
+
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        user "mary", :path=>"/staff/" do
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        group "Admin", :path=>"/admin/" do
+          policy "Admin" do
+            {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+          end
+        end
+
+        group "SES", :path=>"/ses/" do
+          policy "ses-policy" do
+            {"Statement"=>
+              [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
+          end
+        end
+
+        role "my-role", :path=>"/any/" do
+          instance_profiles(
+            "my-instance-profile2"
+          )
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/"
+        instance_profile "my-instance-profile2", :path=>"/profile2/"
+      RUBY
+    end
+
+    subject { client }
+
+    it do
+      updated = apply(subject) { update_instance_profiles_dsl }
+      expect(updated).to be_truthy
+      expected[:roles]["my-role"][:instance_profiles] = ["my-instance-profile2"]
+      expected[:instance_profiles]["my-instance-profile2"] = {:path=>"/profile2/"}
       expect(export).to eq expected
     end
   end

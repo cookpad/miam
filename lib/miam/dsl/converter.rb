@@ -12,6 +12,8 @@ class Miam::DSL::Converter
     [
       output_users(@exported[:users]),
       output_groups(@exported[:groups]),
+      output_roles(@exported[:roles]),
+      output_instance_profiles(@exported[:instance_profiles]),
     ].join("\n")
   end
 
@@ -69,6 +71,62 @@ end
 group #{group_name.inspect}, #{Miam::Utils.unbrace(group_options.inspect)} do
   #{output_policies(attrs[:policies])}
 end
+    EOS
+  end
+
+  def output_roles(roles)
+    roles.each.sort_by {|k, v| k }.map {|role_name, attrs|
+      output_role(role_name, attrs)
+    }.join("\n")
+  end
+
+  def output_role(role_name, attrs)
+    role_options = {:path => attrs[:path]}
+
+    <<-EOS
+role #{role_name.inspect}, #{Miam::Utils.unbrace(role_options.inspect)} do
+  #{output_role_instance_profiles(attrs[:instance_profiles])}
+
+  #{output_assume_role_policy_document(attrs[:assume_role_policy_document])}
+
+  #{output_policies(attrs[:policies])}
+end
+    EOS
+  end
+
+  def output_role_instance_profiles(instance_profiles)
+    if instance_profiles.empty?
+      instance_profiles = ['# no instance_profile']
+    else
+      instance_profiles = instance_profiles.map {|i| i.inspect }
+    end
+
+    instance_profiles = "\n    " + instance_profiles.join(",\n    ") + "\n  "
+    "instance_profiles(#{instance_profiles})"
+  end
+
+  def output_instance_profiles(instance_profiles)
+    instance_profiles.each.sort_by {|k, v| k }.map {|instance_profile_name, attrs|
+      output_instance_profile(instance_profile_name, attrs)
+    }.join("\n")
+  end
+
+  def output_assume_role_policy_document(assume_role_policy_document)
+    assume_role_policy_document = assume_role_policy_document.pretty_inspect
+    assume_role_policy_document.gsub!("\n", "\n    ").strip!
+
+    <<-EOS.strip
+  assume_role_policy_document do
+    #{assume_role_policy_document}
+  end
+    EOS
+  end
+
+  def output_instance_profile(instance_profile_name, attrs)
+    instance_profile_options = {:path => attrs[:path]}
+
+    <<-EOS
+instance_profile #{instance_profile_name.inspect}, #{Miam::Utils.unbrace(instance_profile_options.inspect)}
     EOS
   end
 
