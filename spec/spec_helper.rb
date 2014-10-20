@@ -28,10 +28,11 @@ end
 
 def client(user_options = {})
   options = {
-    password_manager: Miam::PasswordManager.new('/dev/null'),
     logger: Logger.new('/dev/null'),
     no_progress: true
   }
+
+  options[:password_manager] = Miam::PasswordManager.new('/dev/null', options)
 
   if_debug do
     logger = Miam::Logger.instance
