@@ -1,4 +1,6 @@
 class Miam::Client
+  include Miam::Logger::Helper
+
   def initialize(options = {})
     @options = options
     aws_config = options.delete(:aws_config) || {}
@@ -199,12 +201,24 @@ class Miam::Client
   end
 
   def walk_role(role_name, expected_attrs, actual_attrs)
-    if expected_attrs.values_at(:path, :assume_role_policy_document) != actual_attrs.values_at(:path, :assume_role_policy_document)
-      # XXX: warning
+    if expected_attrs.values_at(:path) != actual_attrs.values_at(:path)
+      log(:warn, "Role `#{role_name}`: 'path' cannot be updated", :color => :yellow)
     end
 
-    updated = walk_role_instance_profiles(role_name, expected_attrs[:instance_profiles], actual_attrs[:instance_profiles])
+    updated = walk_assume_role_policy(role_name, expected_attrs[:assume_role_policy_document], actual_attrs[:assume_role_policy_document])
+    updated = walk_role_instance_profiles(role_name, expected_attrs[:instance_profiles], actual_attrs[:instance_profiles]) || updated
     walk_policies(:role, role_name, expected_attrs[:policies], actual_attrs[:policies]) || updated
+  end
+
+  def walk_assume_role_policy(role_name, expected_assume_role_policy, actual_assume_role_policy)
+    updated = false
+
+    if expected_assume_role_policy != actual_assume_role_policy
+      @driver.update_assume_role_policy(role_name, expected_assume_role_policy)
+      updated = true
+    end
+
+    updated
   end
 
   def walk_role_instance_profiles(role_name, expected_instance_profiles, actual_instance_profiles)
@@ -263,8 +277,7 @@ class Miam::Client
     updated = false
 
     if expected_attrs != actual_attrs
-      # XXX: warning
-      #updated = true
+      log(:warn, "InstanceProfile `#{instance_profile_name}`: 'path' cannot be updated", :color => :yellow)
     end
 
     updated

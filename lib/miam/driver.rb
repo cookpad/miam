@@ -209,6 +209,18 @@ class Miam::Driver
     end
   end
 
+  def update_assume_role_policy(role_name, policy_document)
+    log(:info, "Update Role `#{role_name}` > AssumeRolePolicy", :color => :green)
+    log(:info, "  #{policy_document.pretty_inspect.gsub("\n", "\n  ").strip}", :color => :green)
+
+    unless_dry_run do
+      @iam.update_assume_role_policy(
+        :role_name => role_name,
+        :policy_document => encode_document(policy_document),
+      )
+    end
+  end
+
   def create_instance_profile(instance_profile_name, attrs)
     log(:info, "Create InstanceIrofile `#{instance_profile_name}`", :color => :cyan)
 
