@@ -10,9 +10,7 @@ class Miam::Client
   end
 
   def export
-    exported, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options) do |export_options|
-      progress(*export_options.values_at(:progress_total, :progress))
-    end
+    exported, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options)
 
     if block_given?
       [:users, :groups, :roles, :instance_profiles].each do |type|
@@ -34,10 +32,7 @@ class Miam::Client
   def walk(file)
     expected = load_file(file)
 
-    actual, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options) do |export_options|
-      progress(*export_options.values_at(:progress_total, :progress))
-    end
-
+    actual, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options)
     updated = walk_groups(expected[:groups], actual[:groups], actual[:users], group_users)
     updated = walk_users(expected[:users], actual[:users], group_users) || updated
     updated = walk_instance_profiles(expected[:instance_profiles], actual[:instance_profiles], actual[:roles], instance_profile_roles) || updated
@@ -378,15 +373,5 @@ class Miam::Client
     else
       raise TypeError, "can't convert #{file} into File"
     end
-  end
-
-  def progress(total, n)
-    return if @options[:no_progress]
-
-    unless @progressbar
-      @progressbar = ProgressBar.create(:title => "Loading", :total => total, :output => $stderr)
-    end
-
-    @progressbar.progress = n
   end
 end
