@@ -381,4 +381,89 @@ describe 'update' do
       expect(export).to eq expected
     end
   end
+
+  context 'when rename role and instance_profile' do
+    let(:rename_role_and_instance_profile_dsl) do
+      <<-RUBY
+        user "bob", :path=>"/devloper/" do
+          login_profile :password_reset_required=>true
+
+          groups(
+            "Admin",
+            "SES"
+          )
+
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        user "mary", :path=>"/staff/" do
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        group "Admin", :path=>"/admin/" do
+          policy "Admin" do
+            {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+          end
+        end
+
+        group "SES", :path=>"/ses/" do
+          policy "ses-policy" do
+            {"Statement"=>
+              [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
+          end
+        end
+
+        role "my-role2", :path=>"/any/" do
+          instance_profiles(
+            "my-instance-profile2"
+          )
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile2", :path=>"/profile/"
+      RUBY
+    end
+
+    subject { client }
+
+    it do
+      updated = apply(subject) { rename_role_and_instance_profile_dsl }
+      expect(updated).to be_truthy
+      expected[:roles]["my-role"][:instance_profiles] = ["my-instance-profile2"]
+      expected[:roles]["my-role2"] = expected[:roles].delete("my-role")
+      expected[:instance_profiles]["my-instance-profile2"] = expected[:instance_profiles].delete("my-instance-profile")
+      expect(export).to eq expected
+    end
+  end
 end
