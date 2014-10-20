@@ -204,6 +204,7 @@ describe 'update' do
             {"Statement"=>
               [{"Action"=>
                  ["s3:Get*",
+                  "s3:Put*",
                   "s3:List*"],
                 "Effect"=>"Allow",
                 "Resource"=>"*"}]}
@@ -221,6 +222,7 @@ describe 'update' do
       expect(updated).to be_truthy
       expected[:users]["mary"][:policies]["S3"]["Statement"][0]["Action"] = ["s3:Get*", "s3:Put*", "s3:List*"]
       expected[:groups]["SES"][:policies]["ses-policy"]["Statement"][0]["Action"] = "*"
+      expected[:roles]["my-role"][:policies]["role-policy"]["Statement"][0]["Action"] = ["s3:Get*", "s3:Put*", "s3:List*"]
       expect(export).to eq expected
     end
   end
