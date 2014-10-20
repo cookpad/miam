@@ -52,6 +52,8 @@ Usage: miam [options]
     -e, --export
     -o, --output FILE
         --split
+        --split-more
+        --export-concurrency N
         --no-color
         --no-progress
         --debug
