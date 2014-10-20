@@ -188,7 +188,15 @@ class Miam::Client
     end
 
     actual.each do |role_name, attrs|
-      @driver.delete_role(role_name, attrs)
+      instance_profile_names = []
+
+      instance_profile_roles.each do |instance_profile_name, roles|
+        if roles.include?(role_name)
+          instance_profile_names << instance_profile_name
+        end
+      end
+
+      @driver.delete_role(role_name, instance_profile_names, attrs)
 
       instance_profile_roles.each do |instance_profile_name, roles|
         roles.delete(role_name)

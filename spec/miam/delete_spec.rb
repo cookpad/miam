@@ -343,7 +343,7 @@ describe 'delete' do
   end
 
   context 'when delete instance_profile' do
-    let(:delete_group_dsl) do
+    let(:delete_instance_profiles_dsl) do
       <<-RUBY
         user "bob", :path=>"/devloper/" do
           login_profile :password_reset_required=>true
@@ -415,10 +415,70 @@ describe 'delete' do
     subject { client }
 
     it do
-      updated = apply(subject) { delete_group_dsl }
+      updated = apply(subject) { delete_instance_profiles_dsl }
       expect(updated).to be_truthy
       expected[:roles]["my-role"][:instance_profiles] = []
       expected[:instance_profiles].delete("my-instance-profile")
+      expect(export).to eq expected
+    end
+  end
+
+
+  context 'when delete role' do
+    let(:delete_role_dsl) do
+      <<-RUBY
+        user "bob", :path=>"/devloper/" do
+          login_profile :password_reset_required=>true
+
+          groups(
+            "Admin",
+            "SES"
+          )
+
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        user "mary", :path=>"/staff/" do
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        group "Admin", :path=>"/admin/" do
+          policy "Admin" do
+            {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+          end
+        end
+
+        group "SES", :path=>"/ses/" do
+          policy "ses-policy" do
+            {"Statement"=>
+              [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/"
+      RUBY
+    end
+
+    subject { client }
+
+    it do
+      updated = apply(subject) { delete_role_dsl }
+      expect(updated).to be_truthy
+      expected[:roles].delete("my-role")
       expect(export).to eq expected
     end
   end
