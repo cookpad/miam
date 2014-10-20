@@ -76,6 +76,7 @@ def apply(cli = client)
 end
 
 def export(options = {})
+  options = {no_progress: true}.merge(options)
   cli = options.delete(:client) || Aws::IAM::Client.new
   Miam::Exporter.export(cli, options)[0]
 end
