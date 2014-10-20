@@ -9,14 +9,24 @@ class Miam::Client
     @password_manager = options[:password_manager] || Miam::PasswordManager.new('-', options)
   end
 
-  def export
+  def export(export_options = {})
     exported, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options)
 
     if block_given?
       [:users, :groups, :roles, :instance_profiles].each do |type|
         splitted = {:users => {}, :groups => {}, :roles => {}, :instance_profiles => {}}
-        splitted[type] = exported[type]
-        yield(type, Miam::DSL.convert(splitted, @options).strip)
+
+        if export_options[:split_more]
+          exported[type].each do |name, attrs|
+            more_splitted = splitted.dup
+            more_splitted[type] = {}
+            more_splitted[type][name] = attrs
+            yield(:type => type, :name => name, :dsl => Miam::DSL.convert(more_splitted, @options).strip)
+          end
+        else
+          splitted[type] = exported[type]
+          yield(:type => type, :dsl => Miam::DSL.convert(splitted, @options).strip)
+        end
       end
     else
       Miam::DSL.convert(exported, @options)
