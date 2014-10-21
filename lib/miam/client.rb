@@ -17,7 +17,7 @@ class Miam::Client
         splitted = {:users => {}, :groups => {}, :roles => {}, :instance_profiles => {}}
 
         if export_options[:split_more]
-          exported[type].each do |name, attrs|
+          exported[type].sort {|k, v| k }.each do |name, attrs|
             more_splitted = splitted.dup
             more_splitted[type] = {}
             more_splitted[type][name] = attrs
