@@ -44,6 +44,7 @@ ARGV.options do |opt|
     opt.on(''  , '--split')                         {    split                        = true                                  }
     opt.on(''  , '--split-more')                    {    split                        = :more                                 }
     opt.on(''  , '--export-concurrency N', Integer) {|v| options[:export_concurrency] = v                                     }
+    opt.on(''  , '--target REGEXP')                 {|v| options[:target]             = Regexp.new(v)                         }
     opt.on(''  , '--no-color')                      {    options[:color]              = false                                 }
     opt.on(''  , '--no-progress')                   {    options[:no_progress]        = true                                  }
     opt.on(''  , '--debug')                         {    options[:debug]              = true                                  }
