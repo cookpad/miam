@@ -80,6 +80,8 @@ class Miam::Client
     end
 
     actual.each do |user_name, attrs|
+      next unless target_matched?(user_name)
+
       @driver.delete_user(user_name, attrs)
 
       group_users.each do |group_name, users|
@@ -164,6 +166,8 @@ class Miam::Client
     end
 
     actual.each do |group_name, attrs|
+      next unless target_matched?(group_name)
+
       users_in_group = group_users.delete(group_name) || []
       @driver.delete_group(group_name, attrs, users_in_group)
 
@@ -199,6 +203,8 @@ class Miam::Client
     end
 
     actual.each do |role_name, attrs|
+      next unless target_matched?(role_name)
+
       instance_profile_names = []
 
       instance_profile_roles.each do |instance_profile_name, roles|
@@ -281,6 +287,8 @@ class Miam::Client
     end
 
     actual.each do |instance_profile_name, attrs|
+      next unless target_matched?(instance_profile_name)
+
       roles_in_instance_profile = instance_profile_roles.delete(instance_profile_name) || []
       @driver.delete_instance_profile(instance_profile_name, attrs, roles_in_instance_profile)
 
