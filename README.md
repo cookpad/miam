@@ -54,6 +54,7 @@ Usage: miam [options]
         --split
         --split-more
         --export-concurrency N
+        --target REGEXP
         --no-color
         --no-progress
         --debug
