@@ -21,8 +21,9 @@ class Miam::DSL::Converter
 
   def output_users(users)
     users.each.sort_by {|k, v| k }.map {|user_name, attrs|
+      next unless target_matched?(user_name)
       output_user(user_name, attrs)
-    }.join("\n")
+    }.select {|i| i }.join("\n")
   end
 
   def output_user(user_name, attrs)
@@ -60,8 +61,9 @@ end
 
   def output_groups(groups)
     groups.each.sort_by {|k, v| k }.map {|group_name, attrs|
+      next unless target_matched?(group_name)
       output_group(group_name, attrs)
-    }.join("\n")
+    }.select {|i| i }.join("\n")
   end
 
   def output_group(group_name, attrs)
@@ -76,8 +78,9 @@ end
 
   def output_roles(roles)
     roles.each.sort_by {|k, v| k }.map {|role_name, attrs|
+      next unless target_matched?(role_name)
       output_role(role_name, attrs)
-    }.join("\n")
+    }.select {|i| i }.join("\n")
   end
 
   def output_role(role_name, attrs)
@@ -107,8 +110,9 @@ end
 
   def output_instance_profiles(instance_profiles)
     instance_profiles.each.sort_by {|k, v| k }.map {|instance_profile_name, attrs|
+      next unless target_matched?(instance_profile_name)
       output_instance_profile(instance_profile_name, attrs)
-    }.join("\n")
+    }.select {|i| i }.join("\n")
   end
 
   def output_assume_role_policy_document(assume_role_policy_document)
@@ -149,5 +153,13 @@ instance_profile #{instance_profile_name.inspect}, #{Miam::Utils.unbrace(instanc
     #{policy_document}
   end
     EOS
+  end
+
+  def target_matched?(name)
+    if @options[:target]
+      name =~ @options[:target]
+    else
+      true
+    end
   end
 end

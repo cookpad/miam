@@ -59,6 +59,8 @@ class Miam::Client
     updated = scan_rename(:user, expected, actual, group_users)
 
     expected.each do |user_name, expected_attrs|
+      next unless target_matched?(user_name)
+
       actual_attrs = actual.delete(user_name)
 
       if actual_attrs
@@ -78,6 +80,8 @@ class Miam::Client
     end
 
     actual.each do |user_name, attrs|
+      next unless target_matched?(user_name)
+
       @driver.delete_user(user_name, attrs)
 
       group_users.each do |group_name, users|
@@ -147,6 +151,8 @@ class Miam::Client
     updated = scan_rename(:group, expected, actual, group_users)
 
     expected.each do |group_name, expected_attrs|
+      next unless target_matched?(group_name)
+
       actual_attrs = actual.delete(group_name)
 
       if actual_attrs
@@ -160,6 +166,8 @@ class Miam::Client
     end
 
     actual.each do |group_name, attrs|
+      next unless target_matched?(group_name)
+
       users_in_group = group_users.delete(group_name) || []
       @driver.delete_group(group_name, attrs, users_in_group)
 
@@ -181,6 +189,8 @@ class Miam::Client
     updated = false
 
     expected.each do |role_name, expected_attrs|
+      next unless target_matched?(role_name)
+
       actual_attrs = actual.delete(role_name)
 
       if actual_attrs
@@ -193,6 +203,8 @@ class Miam::Client
     end
 
     actual.each do |role_name, attrs|
+      next unless target_matched?(role_name)
+
       instance_profile_names = []
 
       instance_profile_roles.each do |instance_profile_name, roles|
@@ -261,6 +273,8 @@ class Miam::Client
     updated = false
 
     expected.each do |instance_profile_name, expected_attrs|
+      next unless target_matched?(instance_profile_name)
+
       actual_attrs = actual.delete(instance_profile_name)
 
       if actual_attrs
@@ -273,6 +287,8 @@ class Miam::Client
     end
 
     actual.each do |instance_profile_name, attrs|
+      next unless target_matched?(instance_profile_name)
+
       roles_in_instance_profile = instance_profile_roles.delete(instance_profile_name) || []
       @driver.delete_instance_profile(instance_profile_name, attrs, roles_in_instance_profile)
 
@@ -382,6 +398,14 @@ class Miam::Client
       Miam::DSL.parse(file.read, file.path)
     else
       raise TypeError, "can't convert #{file} into File"
+    end
+  end
+
+  def target_matched?(name)
+    if @options[:target]
+      name =~ @options[:target]
+    else
+      true
     end
   end
 end
