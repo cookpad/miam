@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Miam : Miam is a tool to manage IAM. It defines the state of IAM using DSL, and updates IAM according to DSL.">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Miam</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/winebarrel/miam">View on GitHub</a>
+
+          <h1 id="project_title">Miam</h1>
+          <h2 id="project_tagline">Miam is a tool to manage IAM. It defines the state of IAM using DSL, and updates IAM according to DSL.</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/winebarrel/miam/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/winebarrel/miam/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>Add this line to your application's Gemfile:</p>
+
+<div class="highlight highlight-ruby"><pre><span class="pl-k">gem</span> <span class="pl-s1"><span class="pl-pds">'</span>miam<span class="pl-pds">'</span></span></pre></div>
+
+<p>And then execute:</p>
+
+<pre><code>$ bundle
+</code></pre>
+
+<p>Or install it yourself as:</p>
+
+<pre><code>$ gem install miam
+</code></pre>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<div class="highlight highlight-sh"><pre><span class="pl-s">export</span> AWS_ACCESS_KEY_ID=<span class="pl-s1"><span class="pl-pds">'</span>...<span class="pl-pds">'</span></span>
+<span class="pl-s">export</span> AWS_SECRET_ACCESS_KEY=<span class="pl-s1"><span class="pl-pds">'</span>...<span class="pl-pds">'</span></span>
+<span class="pl-s">export</span> AWS_REGION=<span class="pl-s1"><span class="pl-pds">'</span>us-east-1<span class="pl-pds">'</span></span>
+miam -e -o IAMfile  <span class="pl-c"># export IAM</span>
+vi IAMfile
+miam -a --dry-run
+miam -a             <span class="pl-c"># apply `IAMfile`</span></pre></div>
+
+<h2>
+<a id="help" class="anchor" href="#help" aria-hidden="true"><span class="octicon octicon-link"></span></a>Help</h2>
+
+<pre><code>Usage: miam [options]
+    -p, --profile PROFILE_NAME
+        --credentials-path PATH
+    -k, --access-key ACCESS_KEY
+    -s, --secret-key SECRET_KEY
+    -r, --region REGION
+    -a, --apply
+    -f, --file FILE
+        --dry-run
+        --account-output FILE
+    -e, --export
+    -o, --output FILE
+        --split
+        --split-more
+        --export-concurrency N
+        --target REGEXP
+        --no-color
+        --no-progress
+        --debug
+</code></pre>
+
+<h2>
+<a id="iamfile-example" class="anchor" href="#iamfile-example" aria-hidden="true"><span class="octicon octicon-link"></span></a>IAMfile example</h2>
+
+<div class="highlight highlight-ruby"><pre><span class="pl-k">require</span> <span class="pl-s1"><span class="pl-pds">'</span>other/iamfile<span class="pl-pds">'</span></span>
+
+user <span class="pl-s1"><span class="pl-pds">"</span>bob<span class="pl-pds">"</span></span>, <span class="pl-c1">:path</span> =&gt; <span class="pl-s1"><span class="pl-pds">"</span>/developer/<span class="pl-pds">"</span></span> <span class="pl-k">do</span>
+  login_profile <span class="pl-c1">:password_reset_required</span>=&gt;<span class="pl-c1">true</span>
+
+  groups(
+    <span class="pl-s1"><span class="pl-pds">"</span>Admin<span class="pl-pds">"</span></span>
+  )
+
+  policy <span class="pl-s1"><span class="pl-pds">"</span>bob-policy<span class="pl-pds">"</span></span> <span class="pl-k">do</span>
+    {<span class="pl-s1"><span class="pl-pds">"</span>Version<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>2012-10-17<span class="pl-pds">"</span></span>,
+     <span class="pl-s1"><span class="pl-pds">"</span>Statement<span class="pl-pds">"</span></span>=&gt;
+      [{<span class="pl-s1"><span class="pl-pds">"</span>Action<span class="pl-pds">"</span></span>=&gt;
+         [<span class="pl-s1"><span class="pl-pds">"</span>s3:Get*<span class="pl-pds">"</span></span>,
+          <span class="pl-s1"><span class="pl-pds">"</span>s3:List*<span class="pl-pds">"</span></span>],
+        <span class="pl-s1"><span class="pl-pds">"</span>Effect<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>Allow<span class="pl-pds">"</span></span>,
+        <span class="pl-s1"><span class="pl-pds">"</span>Resource<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>*<span class="pl-pds">"</span></span>}]}
+  <span class="pl-k">end</span>
+<span class="pl-k">end</span>
+
+user <span class="pl-s1"><span class="pl-pds">"</span>mary<span class="pl-pds">"</span></span>, <span class="pl-c1">:path</span> =&gt; <span class="pl-s1"><span class="pl-pds">"</span>/staff/<span class="pl-pds">"</span></span> <span class="pl-k">do</span>
+  <span class="pl-c"># login_profile :password_reset_required=&gt;true</span>
+
+  groups(
+    <span class="pl-c"># no group</span>
+  )
+
+  policy <span class="pl-s1"><span class="pl-pds">"</span>s3-readonly<span class="pl-pds">"</span></span> <span class="pl-k">do</span>
+    {<span class="pl-s1"><span class="pl-pds">"</span>Version<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>2012-10-17<span class="pl-pds">"</span></span>,
+     <span class="pl-s1"><span class="pl-pds">"</span>Statement<span class="pl-pds">"</span></span>=&gt;
+      [{<span class="pl-s1"><span class="pl-pds">"</span>Action<span class="pl-pds">"</span></span>=&gt;
+         [<span class="pl-s1"><span class="pl-pds">"</span>s3:Get*<span class="pl-pds">"</span></span>,
+          <span class="pl-s1"><span class="pl-pds">"</span>s3:List*<span class="pl-pds">"</span></span>],
+        <span class="pl-s1"><span class="pl-pds">"</span>Effect<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>Allow<span class="pl-pds">"</span></span>,
+        <span class="pl-s1"><span class="pl-pds">"</span>Resource<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>*<span class="pl-pds">"</span></span>}]}
+  <span class="pl-k">end</span>
+
+  policy <span class="pl-s1"><span class="pl-pds">"</span>route53-readonly<span class="pl-pds">"</span></span> <span class="pl-k">do</span>
+    {<span class="pl-s1"><span class="pl-pds">"</span>Version<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>2012-10-17<span class="pl-pds">"</span></span>,
+     <span class="pl-s1"><span class="pl-pds">"</span>Statement<span class="pl-pds">"</span></span>=&gt;
+      [{<span class="pl-s1"><span class="pl-pds">"</span>Action<span class="pl-pds">"</span></span>=&gt;
+         [<span class="pl-s1"><span class="pl-pds">"</span>route53:Get*<span class="pl-pds">"</span></span>,
+          <span class="pl-s1"><span class="pl-pds">"</span>route53:List*<span class="pl-pds">"</span></span>],
+        <span class="pl-s1"><span class="pl-pds">"</span>Effect<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>Allow<span class="pl-pds">"</span></span>,
+        <span class="pl-s1"><span class="pl-pds">"</span>Resource<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>*<span class="pl-pds">"</span></span>}]}
+  <span class="pl-k">end</span>
+<span class="pl-k">end</span>
+
+group <span class="pl-s1"><span class="pl-pds">"</span>Admin<span class="pl-pds">"</span></span>, <span class="pl-c1">:path</span> =&gt; <span class="pl-s1"><span class="pl-pds">"</span>/admin/<span class="pl-pds">"</span></span> <span class="pl-k">do</span>
+  policy <span class="pl-s1"><span class="pl-pds">"</span>Admin<span class="pl-pds">"</span></span> <span class="pl-k">do</span>
+    {<span class="pl-s1"><span class="pl-pds">"</span>Statement<span class="pl-pds">"</span></span>=&gt;[{<span class="pl-s1"><span class="pl-pds">"</span>Effect<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>Allow<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>Action<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>*<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>Resource<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>*<span class="pl-pds">"</span></span>}]}
+  <span class="pl-k">end</span>
+<span class="pl-k">end</span>
+
+role <span class="pl-s1"><span class="pl-pds">"</span>S3<span class="pl-pds">"</span></span>, <span class="pl-c1">:path</span> =&gt; <span class="pl-s1"><span class="pl-pds">"</span>/<span class="pl-pds">"</span></span> <span class="pl-k">do</span>
+  instance_profiles(
+    <span class="pl-s1"><span class="pl-pds">"</span>S3<span class="pl-pds">"</span></span>
+  )
+
+  assume_role_policy_document <span class="pl-k">do</span>
+    {<span class="pl-s1"><span class="pl-pds">"</span>Version<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>2012-10-17<span class="pl-pds">"</span></span>,
+     <span class="pl-s1"><span class="pl-pds">"</span>Statement<span class="pl-pds">"</span></span>=&gt;
+      [{<span class="pl-s1"><span class="pl-pds">"</span>Sid<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>,
+        <span class="pl-s1"><span class="pl-pds">"</span>Effect<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>Allow<span class="pl-pds">"</span></span>,
+        <span class="pl-s1"><span class="pl-pds">"</span>Principal<span class="pl-pds">"</span></span>=&gt;{<span class="pl-s1"><span class="pl-pds">"</span>Service<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>ec2.amazonaws.com<span class="pl-pds">"</span></span>},
+        <span class="pl-s1"><span class="pl-pds">"</span>Action<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>sts:AssumeRole<span class="pl-pds">"</span></span>}]}
+  <span class="pl-k">end</span>
+
+  policy <span class="pl-s1"><span class="pl-pds">"</span>S3-role-policy<span class="pl-pds">"</span></span> <span class="pl-k">do</span>
+    {<span class="pl-s1"><span class="pl-pds">"</span>Version<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>2012-10-17<span class="pl-pds">"</span></span>,
+     <span class="pl-s1"><span class="pl-pds">"</span>Statement<span class="pl-pds">"</span></span>=&gt;[{<span class="pl-s1"><span class="pl-pds">"</span>Effect<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>Allow<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>Action<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>*<span class="pl-pds">"</span></span>, <span class="pl-s1"><span class="pl-pds">"</span>Resource<span class="pl-pds">"</span></span>=&gt;<span class="pl-s1"><span class="pl-pds">"</span>*<span class="pl-pds">"</span></span>}]}
+  <span class="pl-k">end</span>
+<span class="pl-k">end</span>
+
+instance_profile <span class="pl-s1"><span class="pl-pds">"</span>S3<span class="pl-pds">"</span></span>, <span class="pl-c1">:path</span> =&gt; <span class="pl-s1"><span class="pl-pds">"</span>/<span class="pl-pds">"</span></span></pre></div>
+
+<h2>
+<a id="rename" class="anchor" href="#rename" aria-hidden="true"><span class="octicon octicon-link"></span></a>Rename</h2>
+
+<div class="highlight highlight-ruby"><pre><span class="pl-k">require</span> <span class="pl-s1"><span class="pl-pds">'</span>other/iamfile<span class="pl-pds">'</span></span>
+
+user <span class="pl-s1"><span class="pl-pds">"</span>bob2<span class="pl-pds">"</span></span>, <span class="pl-c1">:path</span> =&gt; <span class="pl-s1"><span class="pl-pds">"</span>/developer/<span class="pl-pds">"</span></span>, <span class="pl-c1">:renamed_from</span> =&gt; <span class="pl-s1"><span class="pl-pds">"</span>bob<span class="pl-pds">"</span></span> <span class="pl-k">do</span>
+  <span class="pl-c"># ...</span>
+<span class="pl-k">end</span>
+
+group <span class="pl-s1"><span class="pl-pds">"</span>Admin2<span class="pl-pds">"</span></span>, <span class="pl-c1">:path</span> =&gt; <span class="pl-s1"><span class="pl-pds">"</span>/admin/<span class="pl-pds">"</span></span>. <span class="pl-c1">:renamed_from</span> =&gt; <span class="pl-s1"><span class="pl-pds">"</span>Admin<span class="pl-pds">"</span></span> <span class="pl-k">do</span>
+  <span class="pl-c"># ...</span>
+<span class="pl-k">end</span></pre></div>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Miam maintained by <a href="https://github.com/winebarrel">winebarrel</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
