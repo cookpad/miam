@@ -20,11 +20,6 @@ class Miam::Exporter
     group_users = {}
     instance_profile_roles = {}
 
-    unless @options[:no_progress]
-      progress_total = users.length + groups.length + roles.length + instance_profiles.length
-      @progressbar = ProgressBar.create(:title => "Loading", :total => progress_total, :output => $stderr)
-    end
-
     expected = {
       :users => export_users(users, group_users),
       :groups => export_groups(groups),
@@ -61,8 +56,6 @@ class Miam::Exporter
         if login_profile
           result[user_name][:login_profile] = login_profile
         end
-
-        progress
       end
     end
 
@@ -101,8 +94,6 @@ class Miam::Exporter
           :path => group.path,
           :policies => policies,
         }
-
-        progress
       end
     end
 
@@ -142,8 +133,6 @@ class Miam::Exporter
           :instance_profiles => instance_profiles,
           :policies => policies,
         }
-
-        progress
       end
     end
 
@@ -171,8 +160,6 @@ class Miam::Exporter
         result[instance_profile_name] = {
           :path => instance_profile.path,
         }
-
-        progress
       end
     end
 
@@ -205,9 +192,5 @@ class Miam::Exporter
     end
 
     account_authorization_details
-  end
-
-  def progress
-    @progressbar.increment if @progressbar
   end
 end
