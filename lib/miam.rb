@@ -6,7 +6,6 @@ require 'singleton'
 require 'thread'
 
 require 'aws-sdk-core'
-require 'ruby-progressbar'
 require 'parallel'
 require 'term/ansicolor'
 
