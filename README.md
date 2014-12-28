@@ -12,7 +12,6 @@ It defines the state of IAM using DSL, and updates IAM according to DSL.
 
 * `>= 0.2.0`
   * Use [get_account_authorization_details](http://docs.aws.amazon.com/sdkforruby/api/Aws/IAM/Client.html#get_account_authorization_details-instance_method).
-  * Remove progress bar.
 
 ## Installation
 
@@ -61,6 +60,7 @@ Usage: miam [options]
         --split-more
         --export-concurrency N
         --target REGEXP
+        --no-progress
         --no-color
         --debug
 ```

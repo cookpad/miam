@@ -29,6 +29,7 @@ end
 def client(user_options = {})
   options = {
     logger: Logger.new('/dev/null'),
+    no_progress: true
   }
 
   options[:password_manager] = Miam::PasswordManager.new('/dev/null', options)
@@ -75,7 +76,7 @@ def apply(cli = client)
 end
 
 def export(options = {})
-  options = {}.merge(options)
+  options = {no_progress: true}.merge(options)
   cli = options.delete(:client) || Aws::IAM::Client.new
   Miam::Exporter.export(cli, options)[0]
 end

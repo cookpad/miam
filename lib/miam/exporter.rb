@@ -1,3 +1,4 @@
+# coding: utf-8
 class Miam::Exporter
   def self.export(iam, options = {})
     self.new(iam, options).export
@@ -19,6 +20,17 @@ class Miam::Exporter
     instance_profiles = list_instance_profiles
     group_users = {}
     instance_profile_roles = {}
+
+    unless @options[:no_progress]
+      progress_total = users.length + groups.length + roles.length + instance_profiles.length
+
+      @progressbar = ProgressBar.create(
+                       :format => ' %bᗧ%i %p%%',
+                       :progress_mark  => ' ',
+                       :remainder_mark => '･',
+                       :total => progress_total,
+                       :output => $stderr)
+    end
 
     expected = {
       :users => export_users(users, group_users),
@@ -56,6 +68,8 @@ class Miam::Exporter
         if login_profile
           result[user_name][:login_profile] = login_profile
         end
+
+        progress
       end
     end
 
@@ -94,6 +108,8 @@ class Miam::Exporter
           :path => group.path,
           :policies => policies,
         }
+
+        progress
       end
     end
 
@@ -133,6 +149,8 @@ class Miam::Exporter
           :instance_profiles => instance_profiles,
           :policies => policies,
         }
+
+        progress
       end
     end
 
@@ -160,6 +178,9 @@ class Miam::Exporter
         result[instance_profile_name] = {
           :path => instance_profile.path,
         }
+
+
+        progress
       end
     end
 
@@ -175,6 +196,10 @@ class Miam::Exporter
   def get_account_authorization_details
     account_authorization_details = {}
 
+    unless @options[:no_progress]
+      progressbar = ProgressBar.create(:title => 'Loading', :total => nil, :output => $stderr)
+    end
+
     keys = [
       :user_detail_list,
       :group_detail_list,
@@ -188,9 +213,17 @@ class Miam::Exporter
     @iam.get_account_authorization_details.each do |resp|
       keys.each do |key|
         account_authorization_details[key].concat(resp[key])
+
+        unless @options[:no_progress]
+          progressbar.increment
+        end
       end
     end
 
     account_authorization_details
+  end
+
+  def progress
+    @progressbar.increment if @progressbar
   end
 end
