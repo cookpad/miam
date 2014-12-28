@@ -60,8 +60,8 @@ Usage: miam [options]
         --split-more
         --export-concurrency N
         --target REGEXP
-        --no-progress
         --no-color
+        --no-progress
         --debug
 ```
 

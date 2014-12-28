@@ -179,7 +179,6 @@ class Miam::Exporter
           :path => instance_profile.path,
         }
 
-
         progress
       end
     end
