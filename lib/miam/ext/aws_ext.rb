@@ -19,7 +19,7 @@ module Seahorse
       private
 
       def add_GetAccountAuthorizationDetails_paginator(json)
-        json["GetAccountAuthorizationDetails"] = {
+        json["pagination"]["GetAccountAuthorizationDetails"] = {
           "input_token" => "Marker",
           "output_token" => "Marker",
           "more_results" => "IsTruncated",
