@@ -8,7 +8,7 @@ It defines the state of IAM using DSL, and updates IAM according to DSL.
 [![Build Status](https://travis-ci.org/winebarrel/miam.svg?branch=master)](https://travis-ci.org/winebarrel/miam)
 [![Coverage Status](https://coveralls.io/repos/winebarrel/miam/badge.png?branch=master)](https://coveralls.io/r/winebarrel/miam?branch=master)
 
-** Notice **
+**Notice**
 
 * `>= 0.2.0`
   * Use [get_account_authorization_details](http://docs.aws.amazon.com/sdkforruby/api/Aws/IAM/Client.html#get_account_authorization_details-instance_method).
