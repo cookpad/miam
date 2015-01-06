@@ -1,3 +1,4 @@
+# coding: utf-8
 class Miam::Exporter
   def self.export(iam, options = {})
     self.new(iam, options).export
@@ -11,16 +12,24 @@ class Miam::Exporter
   end
 
   def export
-    users = list_users
-    groups = list_groups
-    roles = list_roles
+    account_authorization_details = get_account_authorization_details
+
+    users = account_authorization_details[:user_detail_list]
+    groups = account_authorization_details[:group_detail_list]
+    roles = account_authorization_details[:role_detail_list]
     instance_profiles = list_instance_profiles
     group_users = {}
     instance_profile_roles = {}
 
     unless @options[:no_progress]
       progress_total = users.length + groups.length + roles.length + instance_profiles.length
-      @progressbar = ProgressBar.create(:title => "Loading", :total => progress_total, :output => $stderr)
+
+      @progressbar = ProgressBar.create(
+                       :format => ' %bᗧ%i %p%%',
+                       :progress_mark  => ' ',
+                       :remainder_mark => '･',
+                       :total => progress_total,
+                       :output => $stderr)
     end
 
     expected = {
@@ -40,8 +49,8 @@ class Miam::Exporter
 
     Parallel.each(users, :in_threads => @concurrency) do |user|
       user_name = user.user_name
-      groups = export_user_groups(user_name)
-      policies = export_user_policies(user_name)
+      groups = user.group_list
+      policies = export_user_policies(user)
       login_profile = export_login_profile(user_name)
 
       @mutex.synchronize do
@@ -67,23 +76,12 @@ class Miam::Exporter
     result
   end
 
-  def export_user_groups(user_name)
-    @iam.list_groups_for_user(:user_name => user_name).map {|resp|
-      resp.groups.map do |group|
-        group.group_name
-      end
-    }.flatten
-  end
-
-  def export_user_policies(user_name)
+  def export_user_policies(user)
     result = {}
 
-    @iam.list_user_policies(:user_name => user_name).each do |resp|
-      resp.policy_names.map do |policy_name|
-        policy = @iam.get_user_policy(:user_name => user_name, :policy_name => policy_name)
-        document = CGI.unescape(policy.policy_document)
-        result[policy_name] = JSON.parse(document)
-      end
+    user.user_policy_list.each do |policy|
+      document = CGI.unescape(policy.policy_document)
+      result[policy.policy_name] = JSON.parse(document)
     end
 
     result
@@ -103,7 +101,7 @@ class Miam::Exporter
 
     Parallel.each(groups, :in_threads => @concurrency) do |group|
       group_name = group.group_name
-      policies = export_group_policies(group_name)
+      policies = export_group_policies(group)
 
       @mutex.synchronize do
         result[group_name] = {
@@ -118,15 +116,12 @@ class Miam::Exporter
     result
   end
 
-  def export_group_policies(group_name)
+  def export_group_policies(group)
     result = {}
 
-    @iam.list_group_policies(:group_name => group_name).each do |resp|
-      resp.policy_names.map do |policy_name|
-        policy = @iam.get_group_policy(:group_name => group_name, :policy_name => policy_name)
-        document = CGI.unescape(policy.policy_document)
-        result[policy_name] = JSON.parse(document)
-      end
+    group.group_policy_list.each do |policy|
+      document = CGI.unescape(policy.policy_document)
+      result[policy.policy_name] = JSON.parse(document)
     end
 
     result
@@ -137,8 +132,8 @@ class Miam::Exporter
 
     Parallel.each(roles, :in_threads => @concurrency) do |role|
       role_name = role.role_name
-      instance_profiles = export_role_instance_profiles(role_name)
-      policies = export_role_policies(role_name)
+      instance_profiles = role.instance_profile_list.map {|i| i.instance_profile_name }
+      policies = export_role_policies(role)
 
       @mutex.synchronize do
         instance_profiles.each do |instance_profile_name|
@@ -162,23 +157,12 @@ class Miam::Exporter
     result
   end
 
-  def export_role_instance_profiles(role_name)
-    @iam.list_instance_profiles_for_role(:role_name => role_name).map {|resp|
-      resp.instance_profiles.map do |instance_profile|
-        instance_profile.instance_profile_name
-      end
-    }.flatten
-  end
-
-  def export_role_policies(role_name)
+  def export_role_policies(role)
     result = {}
 
-    @iam.list_role_policies(:role_name => role_name).each do |resp|
-      resp.policy_names.map do |policy_name|
-        policy = @iam.get_role_policy(:role_name => role_name, :policy_name => policy_name)
-        document = CGI.unescape(policy.policy_document)
-        result[policy_name] = JSON.parse(document)
-      end
+    role.role_policy_list.each do |policy|
+      document = CGI.unescape(policy.policy_document)
+      result[policy.policy_name] = JSON.parse(document)
     end
 
     result
@@ -202,36 +186,40 @@ class Miam::Exporter
     result
   end
 
-  def export_role_instance_profiles(role_name)
-    @iam.list_instance_profiles_for_role(:role_name => role_name).map {|resp|
-      resp.instance_profiles.map do |instance_profile|
-        instance_profile.instance_profile_name
-      end
-    }.flatten
-  end
-
-  def list_users
-    @iam.list_users.map {|resp|
-      resp.users.to_a
-    }.flatten
-  end
-
-  def list_groups
-    @iam.list_groups.map {|resp|
-      resp.groups.to_a
-    }.flatten
-  end
-
-  def list_roles
-    @iam.list_roles.map {|resp|
-      resp.roles.to_a
-    }.flatten
-  end
-
   def list_instance_profiles
     @iam.list_instance_profiles.map {|resp|
       resp.instance_profiles.to_a
     }.flatten
+  end
+
+  def get_account_authorization_details
+    account_authorization_details = {}
+
+    unless @options[:no_progress]
+      progressbar = ProgressBar.create(:title => 'Loading', :total => nil, :output => $stderr)
+    end
+
+    keys = [
+      :user_detail_list,
+      :group_detail_list,
+      :role_detail_list,
+    ]
+
+    keys.each do |key|
+      account_authorization_details[key] = []
+    end
+
+    @iam.get_account_authorization_details.each do |resp|
+      keys.each do |key|
+        account_authorization_details[key].concat(resp[key])
+
+        unless @options[:no_progress]
+          progressbar.increment
+        end
+      end
+    end
+
+    account_authorization_details
   end
 
   def progress
