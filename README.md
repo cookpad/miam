@@ -158,3 +158,6 @@ group "Admin2", :path => "/admin/". :renamed_from => "Admin" do
   # ...
 end
 ```
+
+## Similar tools
+* [Codenize.tools](http://http://codenize.tools/)
