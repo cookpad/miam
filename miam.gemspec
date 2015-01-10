@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description   = %q{TODO: Write a longer description. Optional.}
   spec.summary       = %q{Miam is a tool to manage IAM.}
   spec.description   = %q{Miam is a tool to manage IAM. It defines the state of IAM using DSL, and updates IAM according to DSL.}
-  spec.homepage      = 'https://github.com/winebarrel/miam'
+  spec.homepage      = 'http://miam.codenize.tools/'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0")
