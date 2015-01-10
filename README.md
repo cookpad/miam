@@ -160,4 +160,4 @@ end
 ```
 
 ## Similar tools
-* [Codenize.tools](http://http://codenize.tools/)
+* [Codenize.tools](http://codenize.tools)
