@@ -2,8 +2,6 @@
 layout: default
 ---
 
-# Miam
-
 [![Gem Version](https://badge.fury.io/rb/miam.svg)](http://badge.fury.io/rb/miam)
 [![Build Status](https://travis-ci.org/winebarrel/miam.svg?branch=master)](https://travis-ci.org/winebarrel/miam)
 [![Coverage Status](https://img.shields.io/coveralls/winebarrel/miam.svg)](https://coveralls.io/r/winebarrel/miam?branch=master)
