@@ -1,0 +1,14 @@
+# Site settings
+title: Miam
+email: sgwr_dts@yahoo.co.jp
+description: "Miam is a tool to manage IAM. It defines the state of IAM using DSL, and updates IAM according to DSL."
+baseurl: "" # the subpath of your site, e.g. /blog/
+url: "http://miam.codenize.tools/"
+github_url: "https://github.com/winebarrel/miam"
+twitter_username: sgwr_dts
+github_username:  winebarrel
+original_background_image_url: "https://www.flickr.com/photos/_fxr/2193772756/in/photolist-4kREdd-9dp4hJ-9dp3Xm-8J6P9Q-73h17T-63vVn5-48y7KH-7oeKxx-32LDWq-fhL2Ru-dyRt1B-4n48v9-afP91m-pLR4AT-nGSWeQ-5XBGWa-73gYae-73m1oq-73kUc9-73jmkw-73kRSJ-7dBs5M-8J71rb-njVo3M-8MRWU-kwYoXn-jU5Hrr-npTwAa-e8X5w4-nJGeLv-6Tsn74-e93JVf-e93JTb-6TuH4W-8ho5S6-8hrjLA-bEJC1Y-8hrjRS-6aQJb8-2Fx9qa-7HePko-6xioqZ-vus9t-e8X5tx-62BtR4-6TiCfQ-63akXe-63am3X-kCxrw-iVoyB"
+background_image_licence: "images/background.license"
+
+# Build settings
+markdown: kramdown
