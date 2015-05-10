@@ -2,7 +2,7 @@ class Miam::Client
   include Miam::Logger::Helper
 
   def initialize(options = {})
-    @options = options
+    @options = {:format => :ruby}.merge(options)
     aws_config = options.delete(:aws_config) || {}
     @iam = Aws::IAM::Client.new(aws_config)
     @driver = Miam::Driver.new(@iam, options)
