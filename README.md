@@ -58,6 +58,7 @@ Usage: miam [options]
     -o, --output FILE
         --split
         --split-more
+        --format=FORMAT
         --export-concurrency N
         --target REGEXP
         --no-color
