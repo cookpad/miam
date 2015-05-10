@@ -16,3 +16,4 @@ test.rb
 IAMfile
 *.iam
 account.csv
+*.json

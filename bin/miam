@@ -48,6 +48,7 @@ ARGV.options do |opt|
     opt.on('-o', '--output FILE')                   {|v| output_file                  = v                                     }
     opt.on(''  , '--split')                         {    split                        = true                                  }
     opt.on(''  , '--split-more')                    {    split                        = :more                                 }
+    opt.on('',   '--format=FORMAT', [:ruby, :json]) {|v| options[:format]             = v       }
     opt.on(''  , '--export-concurrency N', Integer) {|v| options[:export_concurrency] = v                                     }
     opt.on(''  , '--target REGEXP')                 {|v| options[:target]             = Regexp.new(v)                         }
     opt.on(''  , '--no-color')                      {    options[:color]              = false                                 }
@@ -102,11 +103,12 @@ begin
       output_file = DEFAULT_FILENAME if output_file == '-'
       requires = []
 
-      client.export(:split_more => (split == :more)) do |args|
+      client.export(:split_more => (split == :more), :convert => (options[:format] == :ruby)) do |args|
         type, dsl = args.values_at(:type, :dsl)
-        next if dsl.strip.empty?
+        next if dsl.empty?
 
         type = type.to_s
+        dsl = JSON.pretty_generate(dsl) if options[:format] == :json
         dir = File.dirname(output_file)
 
         if split == :more
@@ -122,32 +124,41 @@ begin
           requires << iam_filename
         end
 
+        if options[:format] == :json
+          iam_file << '.json'
+        end
+
         logger.info("  write `#{iam_file}`")
 
         open(iam_file, 'wb') do |f|
-          f.puts MAGIC_COMMENT
+          f.puts MAGIC_COMMENT if options[:format] == :ruby
           f.puts dsl
         end
       end
 
-      logger.info("  write `#{output_file}`")
+      if options[:format] == :ruby
+        logger.info("  write `#{output_file}`")
 
-      open(output_file, 'wb') do |f|
-        f.puts MAGIC_COMMENT
+        open(output_file, 'wb') do |f|
+          f.puts MAGIC_COMMENT
 
-        requires.each do |iam_file|
-          f.puts "require '#{iam_file}'"
+          requires.each do |iam_file|
+            f.puts "require '#{iam_file}'"
+          end
         end
       end
     else
+      exported = client.export(:convert => (options[:format] == :ruby))
+      exported = JSON.pretty_generate(exported) if options[:format] == :json
+
       if output_file == '-'
         logger.info('# Export IAM')
-        puts client.export.strip
+        puts exported
       else
         logger.info("Export IAM to `#{output_file}`")
         open(output_file, 'wb') do |f|
-          f.puts MAGIC_COMMENT
-          f.puts client.export.strip
+          f.puts MAGIC_COMMENT if options[:format] == :ruby
+          f.puts exported
         end
       end
     end

@@ -10,6 +10,7 @@ class Miam::Client
   end
 
   def export(export_options = {})
+    export_options = {convert: true}.merge(export_options)
     exported, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options)
 
     if block_given?
@@ -21,15 +22,17 @@ class Miam::Client
             more_splitted = splitted.dup
             more_splitted[type] = {}
             more_splitted[type][name] = attrs
-            yield(:type => type, :name => name, :dsl => Miam::DSL.convert(more_splitted, @options).strip)
+            dsl = export_options[:convert] ? Miam::DSL.convert(more_splitted, @options).strip : more_splitted
+            yield(:type => type, :name => name, :dsl => dsl)
           end
         else
           splitted[type] = exported[type]
-          yield(:type => type, :dsl => Miam::DSL.convert(splitted, @options).strip)
+          dsl = export_options[:convert] ? Miam::DSL.convert(splitted, @options).strip : splitted
+          yield(:type => type, :dsl => dsl)
         end
       end
     else
-      Miam::DSL.convert(exported, @options)
+      export_options[:convert] ? Miam::DSL.convert(exported, @options).strip : exported
     end
   end
 
