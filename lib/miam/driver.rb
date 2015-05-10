@@ -17,7 +17,7 @@ class Miam::Driver
       @iam.create_user(params)
     end
 
-    new_user_attrs = {:groups => [], :policies => {}}
+    new_user_attrs = {:groups => [], :policies => {}, :attached_managed_policies => []}
     new_user_attrs[:path] = attrs[:path] if attrs[:path]
     new_user_attrs
   end
@@ -134,7 +134,7 @@ class Miam::Driver
       @iam.create_group(params)
     end
 
-    new_group_attrs = {:policies => {}}
+    new_group_attrs = {:policies => {}, :attached_managed_policies => []}
     new_group_attrs[:path] = attrs[:path] if attrs[:path]
     new_group_attrs
   end
@@ -176,7 +176,8 @@ class Miam::Driver
     new_role_attrs = {
       :instance_profiles => [],
       :assume_role_policy_document => assume_role_policy_document,
-      :policies => {}
+      :policies => {},
+      :attached_managed_policies => [],
     }
 
     new_role_attrs[:path] = attrs[:path] if attrs[:path]
