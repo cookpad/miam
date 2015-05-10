@@ -1,7 +1,7 @@
 class Miam::DSL::Context::Group
   def initialize(name, &block)
     @group_name = name
-    @result = {:policies => {}}
+    @result = {:policies => {}, :attached_managed_policies => []}
     instance_eval(&block)
   end
 
@@ -23,5 +23,9 @@ class Miam::DSL::Context::Group
     end
 
     @result[:policies][name] = policy_document
+  end
+
+  def attached_managed_policies(*policies)
+    @result[:attached_managed_policies].concat(policies.map(&:to_s))
   end
 end

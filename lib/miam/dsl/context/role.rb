@@ -1,7 +1,7 @@
 class Miam::DSL::Context::Role
   def initialize(name, &block)
     @role_name = name
-    @result = {:instance_profiles => [], :policies => {}}
+    @result = {:instance_profiles => [], :policies => {}, :attached_managed_policies => []}
     instance_eval(&block)
   end
 
@@ -16,7 +16,7 @@ class Miam::DSL::Context::Role
   private
 
   def instance_profiles(*profiles)
-    @result[:instance_profiles].concat(profiles.map {|i| i.to_s })
+    @result[:instance_profiles].concat(profiles.map(&:to_s))
   end
 
   def assume_role_policy_document
@@ -47,5 +47,9 @@ class Miam::DSL::Context::Role
     end
 
     @result[:policies][name] = policy_document
+  end
+
+  def attached_managed_policies(*policies)
+    @result[:attached_managed_policies].concat(policies.map(&:to_s))
   end
 end
