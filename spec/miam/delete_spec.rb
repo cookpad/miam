@@ -76,6 +76,7 @@ describe 'delete' do
       {"bob"=>
         {:path=>"/devloper/",
          :groups=>["Admin", "SES"],
+         :attached_managed_policies=>[],
          :policies=>
           {"S3"=>
             {"Statement"=>
@@ -86,6 +87,7 @@ describe 'delete' do
        "mary"=>
         {:path=>"/staff/",
          :groups=>[],
+         :attached_managed_policies=>[],
          :policies=>
           {"S3"=>
             {"Statement"=>
@@ -95,11 +97,13 @@ describe 'delete' do
      :groups=>
       {"Admin"=>
         {:path=>"/admin/",
+         :attached_managed_policies=>[],
          :policies=>
           {"Admin"=>
             {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}}},
        "SES"=>
         {:path=>"/ses/",
+         :attached_managed_policies=>[],
          :policies=>
           {"ses-policy"=>
             {"Statement"=>
@@ -117,6 +121,7 @@ describe 'delete' do
               "Principal"=>{"Service"=>"ec2.amazonaws.com"},
               "Action"=>"sts:AssumeRole"}]},
          :instance_profiles=>["my-instance-profile"],
+         :attached_managed_policies=>[],
          :policies=>
           {"role-policy"=>
             {"Statement"=>
