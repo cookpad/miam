@@ -34,6 +34,7 @@ ARGV.options do |opt|
     region = nil
     profile_name = nil
     credentials_path = nil
+    format_passed = false
 
     opt.on('-p', '--profile PROFILE_NAME')          {|v| profile_name                 = v                                     }
     opt.on(''  , '--credentials-path PATH')         {|v| credentials_path             = v                                     }
@@ -48,7 +49,7 @@ ARGV.options do |opt|
     opt.on('-o', '--output FILE')                   {|v| output_file                  = v                                     }
     opt.on(''  , '--split')                         {    split                        = true                                  }
     opt.on(''  , '--split-more')                    {    split                        = :more                                 }
-    opt.on('',   '--format=FORMAT', [:ruby, :json]) {|v| options[:format]             = v       }
+    opt.on('',   '--format=FORMAT', [:ruby, :json]) {|v| format_passed = true; options[:format] = v                           }
     opt.on(''  , '--export-concurrency N', Integer) {|v| options[:export_concurrency] = v                                     }
     opt.on(''  , '--target REGEXP')                 {|v| options[:target]             = Regexp.new(v)                         }
     opt.on(''  , '--no-color')                      {    options[:color]              = false                                 }
@@ -76,6 +77,10 @@ ARGV.options do |opt|
 
     aws_opts[:region] = region if region
     Aws.config.update(aws_opts)
+
+    if not format_passed and [file, output_file].any? {|i| i =~ /\.json\z/ }
+      options[:format] = :json
+    end
   rescue => e
     $stderr.puts("[ERROR] #{e.message}")
     exit 1

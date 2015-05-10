@@ -407,10 +407,16 @@ class Miam::Client
   def load_file(file)
     if file.kind_of?(String)
       open(file) do |f|
-        Miam::DSL.parse(f.read, file)
+        exec_by_format(
+          :ruby => proc { Miam::DSL.parse(f.read, file) },
+          :json => proc { load_json(f) }
+        )
       end
     elsif file.respond_to?(:read)
-      Miam::DSL.parse(file.read, file.path)
+      exec_by_format(
+        :ruby => proc { Miam::DSL.parse(file.read, file.path) },
+        :json => proc { load_json(f) }
+      )
     else
       raise TypeError, "can't convert #{file} into File"
     end
@@ -428,5 +434,32 @@ class Miam::Client
     format_proc = proc_by_format[@options[:format]]
     raise "Invalid format: #{@options[:format]}" unless format_proc
     format_proc.call
+  end
+
+  def load_json(json)
+    json = JSON.load(json)
+    normalized = {}
+
+    json.each do |top_key, top_value|
+      normalized[top_key.to_sym] = top_attrs = {}
+
+      top_value.each do |second_key, second_value|
+        top_attrs[second_key] = second_attrs = {}
+
+        second_value.each do |third_key, third_value|
+          third_key = third_key.to_sym
+
+          if third_key == :login_profile
+            new_third_value = {}
+            third_value.each {|k, v| new_third_value[k.to_sym] = v }
+            third_value = new_third_value
+          end
+
+          second_attrs[third_key] = third_value
+        end
+      end
+    end
+
+    normalized
   end
 end
