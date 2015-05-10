@@ -20,6 +20,7 @@ EOS
 
 options = {
   :dry_run => false,
+  :format  => :ruby,
   :color   => true,
   :debug   => false,
 }
