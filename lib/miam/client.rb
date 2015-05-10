@@ -112,6 +112,7 @@ class Miam::Client
   def walk_user(user_name, expected_attrs, actual_attrs)
     updated = walk_login_profile(user_name, expected_attrs[:login_profile], actual_attrs[:login_profile])
     updated = walk_user_groups(user_name, expected_attrs[:groups], actual_attrs[:groups]) || updated
+    updated = walk_attached_managed_policies(:user, user_name, expected_attrs[:attached_managed_policies], actual_attrs[:attached_managed_policies]) || updated
     walk_policies(:user, user_name, expected_attrs[:policies], actual_attrs[:policies]) || updated
   end
 
@@ -197,7 +198,8 @@ class Miam::Client
   end
 
   def walk_group(group_name, expected_attrs, actual_attrs)
-    walk_policies(:group, group_name, expected_attrs[:policies], actual_attrs[:policies])
+    updated = walk_policies(:group, group_name, expected_attrs[:policies], actual_attrs[:policies])
+    walk_attached_managed_policies(:group, group_name, expected_attrs[:attached_managed_policies], actual_attrs[:attached_managed_policies]) || updated
   end
 
   def walk_roles(expected, actual, instance_profile_roles)
@@ -247,6 +249,7 @@ class Miam::Client
 
     updated = walk_assume_role_policy(role_name, expected_attrs[:assume_role_policy_document], actual_attrs[:assume_role_policy_document])
     updated = walk_role_instance_profiles(role_name, expected_attrs[:instance_profiles], actual_attrs[:instance_profiles]) || updated
+    updated = walk_attached_managed_policies(:role, role_name, expected_attrs[:attached_managed_policies], actual_attrs[:attached_managed_policies]) || updated
     walk_policies(:role, role_name, expected_attrs[:policies], actual_attrs[:policies]) || updated
   end
 
@@ -403,6 +406,30 @@ class Miam::Client
 
     updated
   end
+
+  def walk_attached_managed_policies(type, name, expected_attached_managed_policies, actual_attached_managed_policies)
+    expected_attached_managed_policies = expected_attached_managed_policies.sort
+    actual_attached_managed_policies = actual_attached_managed_policies.sort
+    updated = false
+
+    if expected_attached_managed_policies != actual_attached_managed_policies
+      add_attached_managed_policies = expected_attached_managed_policies - actual_attached_managed_policies
+      remove_attached_managed_policies = actual_attached_managed_policies - expected_attached_managed_policies
+
+      unless add_attached_managed_policies.empty?
+        @driver.attach_policies(type, name, add_attached_managed_policies)
+      end
+
+      unless remove_attached_managed_policies.empty?
+        @driver.detach_policies(type, name, remove_attached_managed_policies)
+      end
+
+      updated = true
+    end
+
+    updated
+  end
+
 
   def load_file(file)
     if file.kind_of?(String)

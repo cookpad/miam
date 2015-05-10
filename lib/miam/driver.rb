@@ -305,6 +305,34 @@ class Miam::Driver
     end
   end
 
+  def attach_policies(type, name, policies)
+    type = type.to_s
+    type_s = type.slice(0, 1).upcase + type.slice(1..-1)
+
+    log(:info, "Update #{type_s} `#{name}`", :color => :green)
+    log(:info, "  attach policies=#{policies.join(',')}", :color => :green)
+
+    unless_dry_run do
+      policies.each do |arn|
+        @iam.send("attach_#{type}_policy", :"#{type}_name" => name, :policy_arn => arn)
+      end
+    end
+  end
+
+  def detach_policies(type, name, policies)
+    type = type.to_s
+    type_s = type.slice(0, 1).upcase + type.slice(1..-1)
+
+    log(:info, "Update #{type_s} `#{name}`", :color => :green)
+    log(:info, "  detach policies=#{policies.join(',')}", :color => :green)
+
+    unless_dry_run do
+      policies.each do |arn|
+        @iam.send("detach_#{type}_policy", :"#{type}_name" => name, :policy_arn => arn)
+      end
+    end
+  end
+
   def list_access_key_ids(user_name)
     @iam.list_access_keys(:user_name => user_name).map {|resp|
       resp.access_key_metadata.map do |metadata|
