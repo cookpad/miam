@@ -108,7 +108,6 @@ begin
         next if dsl.empty?
 
         type = type.to_s
-        dsl = JSON.pretty_generate(dsl) if options[:format] == :json
         dir = File.dirname(output_file)
 
         if split == :more
@@ -149,7 +148,6 @@ begin
       end
     else
       exported = client.export(:convert => (options[:format] == :ruby))
-      exported = JSON.pretty_generate(exported) if options[:format] == :json
 
       if output_file == '-'
         logger.info('# Export IAM')

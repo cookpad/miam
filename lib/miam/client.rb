@@ -10,7 +10,6 @@ class Miam::Client
   end
 
   def export(export_options = {})
-    export_options = {convert: true}.merge(export_options)
     exported, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options)
 
     if block_given?
@@ -22,17 +21,30 @@ class Miam::Client
             more_splitted = splitted.dup
             more_splitted[type] = {}
             more_splitted[type][name] = attrs
-            dsl = export_options[:convert] ? Miam::DSL.convert(more_splitted, @options).strip : more_splitted
+
+            dsl = exec_by_format(
+              :ruby => proc { Miam::DSL.convert(more_splitted, @options).strip },
+              :json => proc { JSON.pretty_generate(more_splitted) }
+            )
+
             yield(:type => type, :name => name, :dsl => dsl)
           end
         else
           splitted[type] = exported[type]
-          dsl = export_options[:convert] ? Miam::DSL.convert(splitted, @options).strip : splitted
+
+          dsl = exec_by_format(
+            :ruby => proc { Miam::DSL.convert(splitted, @options).strip },
+            :json => proc { JSON.pretty_generate(splitted) }
+          )
+
           yield(:type => type, :dsl => dsl)
         end
       end
     else
-      export_options[:convert] ? Miam::DSL.convert(exported, @options).strip : exported
+      dsl = exec_by_format(
+        :ruby => proc { Miam::DSL.convert(exported, @options).strip },
+        :json => proc { JSON.pretty_generate(exported) }
+      )
     end
   end
 
@@ -410,5 +422,11 @@ class Miam::Client
     else
       true
     end
+  end
+
+  def exec_by_format(proc_by_format)
+    format_proc = proc_by_format[@options[:format]]
+    raise "Invalid format: #{@options[:format]}" unless format_proc
+    format_proc.call
   end
 end
