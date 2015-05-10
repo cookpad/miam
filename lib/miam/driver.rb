@@ -54,6 +54,10 @@ class Miam::Driver
         @iam.remove_user_from_group(:group_name => group_name, :user_name => user_name)
       end
 
+      attrs[:attached_managed_policies].each do |policy_arn|
+        @iam.detach_user_policy(:user_name => user_name, :policy_arn => policy_arn)
+      end
+
       list_access_key_ids(user_name).each do |access_key_id|
         @iam.delete_access_key(:user_name => user_name, :access_key_id => access_key_id)
       end
@@ -147,6 +151,10 @@ class Miam::Driver
         @iam.remove_user_from_group(:group_name => group_name, :user_name => user_name)
       end
 
+      attrs[:attached_managed_policies].each do |policy_arn|
+        @iam.detach_group_policy(:group_name => group_name, :policy_arn => policy_arn)
+      end
+
       @iam.delete_group(:group_name => group_name)
     end
   end
@@ -185,6 +193,10 @@ class Miam::Driver
 
       instance_profile_names.each do |instance_profile_name|
         @iam.remove_role_from_instance_profile(:instance_profile_name => instance_profile_name, :role_name => role_name)
+      end
+
+      attrs[:attached_managed_policies].each do |policy_arn|
+        @iam.detach_role_policy(:role_name => role_name, :policy_arn => policy_arn)
       end
 
       @iam.delete_role(:role_name => role_name)
