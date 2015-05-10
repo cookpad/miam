@@ -13,6 +13,10 @@ file = DEFAULT_FILENAME
 output_file = '-'
 account_output = 'account.csv'
 split = false
+MAGIC_COMMENT = <<-EOS
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+EOS
 
 options = {
   :dry_run => false,
@@ -120,6 +124,7 @@ begin
         logger.info("  write `#{iam_file}`")
 
         open(iam_file, 'wb') do |f|
+          f.puts MAGIC_COMMENT
           f.puts dsl
         end
       end
@@ -127,6 +132,8 @@ begin
       logger.info("  write `#{output_file}`")
 
       open(output_file, 'wb') do |f|
+        f.puts MAGIC_COMMENT
+
         requires.each do |iam_file|
           f.puts "require '#{iam_file}'"
         end
@@ -137,7 +144,10 @@ begin
         puts client.export.strip
       else
         logger.info("Export IAM to `#{output_file}`")
-        open(output_file, 'wb') {|f| f.puts client.export.strip }
+        open(output_file, 'wb') do |f|
+          f.puts MAGIC_COMMENT
+          f.puts client.export.strip
+        end
       end
     end
   when :apply
