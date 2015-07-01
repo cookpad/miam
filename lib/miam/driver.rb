@@ -239,7 +239,7 @@ class Miam::Driver
   end
 
   def create_instance_profile(instance_profile_name, attrs)
-    log(:info, "Create InstanceIrofile `#{instance_profile_name}`", :color => :cyan)
+    log(:info, "Create InstanceProfile `#{instance_profile_name}`", :color => :cyan)
 
     unless_dry_run do
       params = {:instance_profile_name => instance_profile_name}
