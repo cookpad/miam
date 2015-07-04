@@ -12,6 +12,9 @@ It defines the state of IAM using DSL, and updates IAM according to DSL.
 
 * `>= 0.2.0`
   * Use [get_account_authorization_details](http://docs.aws.amazon.com/sdkforruby/api/Aws/IAM/Client.html#get_account_authorization_details-instance_method).
+* `>= 0.2.1`
+  * Support Managed Policy attach/detach
+  * Support JSON format
 
 ## Installation
 
@@ -167,6 +170,50 @@ end
 group "Admin2", :path => "/admin/". :renamed_from => "Admin" do
   # ...
 end
+```
+
+## Managed Policy attach/detach
+
+```ruby
+user "bob", :path => "/developer/" do
+  login_profile :password_reset_required=>true
+
+  groups(
+    "Admin"
+  )
+
+  policy "bob-policy" do
+    # ...
+  end
+
+  attached_managed_policies(
+    "arn:aws:iam::aws:policy/AmazonElastiCacheReadOnlyAccess"
+  )
+end
+```
+
+## Use JSON
+
+```sh
+$ miam -e -o iam.json
+   ᗧ 100%
+Export IAM to `iam.json`
+
+$ cat iam.json
+{
+  "users": {
+    "bob": {
+      "path": "/",
+      "groups": [
+        "Admin"
+      ],
+      "policies": {
+      ...
+
+$ miam -a -f iam.json --dry-run
+Apply `iam.json` to IAM (dry-run)
+   ᗧ 100%
+No change
 ```
 
 ## Similar tools
