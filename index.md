@@ -4,12 +4,15 @@ layout: default
 
 [![Gem Version](https://badge.fury.io/rb/miam.svg)](http://badge.fury.io/rb/miam)
 [![Build Status](https://travis-ci.org/winebarrel/miam.svg?branch=master)](https://travis-ci.org/winebarrel/miam)
-[![Coverage Status](https://img.shields.io/coveralls/winebarrel/miam.svg)](https://coveralls.io/r/winebarrel/miam?branch=master)
+[![Coverage Status](https://coveralls.io/repos/winebarrel/miam/badge.svg?branch=master)](https://coveralls.io/r/winebarrel/miam?branch=master)
 
 **Notice**
 
 * `>= 0.2.0`
   * Use [get_account_authorization_details](http://docs.aws.amazon.com/sdkforruby/api/Aws/IAM/Client.html#get_account_authorization_details-instance_method).
+* `>= 0.2.1`
+  * Support Managed Policy attach/detach
+  * Support JSON format
 
 ## Installation
 
@@ -56,6 +59,7 @@ Usage: miam [options]
     -o, --output FILE
         --split
         --split-more
+        --format=FORMAT
         --export-concurrency N
         --target REGEXP
         --no-color
@@ -84,6 +88,10 @@ user "bob", :path => "/developer/" do
         "Effect"=>"Allow",
         "Resource"=>"*"}]}
   end
+
+  attached_managed_policies(
+    # attached_managed_policy
+  )
 end
 
 user "mary", :path => "/staff/" do
@@ -112,6 +120,11 @@ user "mary", :path => "/staff/" do
         "Effect"=>"Allow",
         "Resource"=>"*"}]}
   end
+
+  attached_managed_policies(
+    "arn:aws:iam::aws:policy/AdministratorAccess",
+    "arn:aws:iam::123456789012:policy/my_policy"
+  )
 end
 
 group "Admin", :path => "/admin/" do
@@ -155,6 +168,50 @@ end
 group "Admin2", :path => "/admin/". :renamed_from => "Admin" do
   # ...
 end
+{% endhighlight %}
+
+## Managed Policy attach/detach
+
+{% highlight ruby %}
+user "bob", :path => "/developer/" do
+  login_profile :password_reset_required=>true
+
+  groups(
+    "Admin"
+  )
+
+  policy "bob-policy" do
+    # ...
+  end
+
+  attached_managed_policies(
+    "arn:aws:iam::aws:policy/AmazonElastiCacheReadOnlyAccess"
+  )
+end
+{% endhighlight %}
+
+## Use JSON
+
+{% highlight sh %}
+$ miam -e -o iam.json
+   ᗧ 100%
+Export IAM to `iam.json`
+
+$ cat iam.json
+{
+  "users": {
+    "bob": {
+      "path": "/",
+      "groups": [
+        "Admin"
+      ],
+      "policies": {
+      ...
+
+$ miam -a -f iam.json --dry-run
+Apply `iam.json` to IAM (dry-run)
+   ᗧ 100%
+No change
 {% endhighlight %}
 
 ## Similar tools
