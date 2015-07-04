@@ -1,7 +1,7 @@
 class Miam::DSL::Context::User
   def initialize(name, &block)
     @user_name = name
-    @result = {:groups => [], :policies => {}}
+    @result = {:groups => [], :policies => {}, :attached_managed_policies => []}
     instance_eval(&block)
   end
 
@@ -14,7 +14,7 @@ class Miam::DSL::Context::User
   end
 
   def groups(*grps)
-    @result[:groups].concat(grps.map {|i| i.to_s })
+    @result[:groups].concat(grps.map(&:to_s))
   end
 
   def policy(name)
@@ -31,5 +31,9 @@ class Miam::DSL::Context::User
     end
 
     @result[:policies][name] = policy_document
+  end
+
+  def attached_managed_policies(*policies)
+    @result[:attached_managed_policies].concat(policies.map(&:to_s))
   end
 end

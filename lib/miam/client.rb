@@ -2,7 +2,7 @@ class Miam::Client
   include Miam::Logger::Helper
 
   def initialize(options = {})
-    @options = options
+    @options = {:format => :ruby}.merge(options)
     aws_config = options.delete(:aws_config) || {}
     @iam = Aws::IAM::Client.new(aws_config)
     @driver = Miam::Driver.new(@iam, options)
@@ -21,15 +21,30 @@ class Miam::Client
             more_splitted = splitted.dup
             more_splitted[type] = {}
             more_splitted[type][name] = attrs
-            yield(:type => type, :name => name, :dsl => Miam::DSL.convert(more_splitted, @options).strip)
+
+            dsl = exec_by_format(
+              :ruby => proc { Miam::DSL.convert(more_splitted, @options).strip },
+              :json => proc { JSON.pretty_generate(more_splitted) }
+            )
+
+            yield(:type => type, :name => name, :dsl => dsl)
           end
         else
           splitted[type] = exported[type]
-          yield(:type => type, :dsl => Miam::DSL.convert(splitted, @options).strip)
+
+          dsl = exec_by_format(
+            :ruby => proc { Miam::DSL.convert(splitted, @options).strip },
+            :json => proc { JSON.pretty_generate(splitted) }
+          )
+
+          yield(:type => type, :dsl => dsl)
         end
       end
     else
-      Miam::DSL.convert(exported, @options)
+      dsl = exec_by_format(
+        :ruby => proc { Miam::DSL.convert(exported, @options).strip },
+        :json => proc { JSON.pretty_generate(exported) }
+      )
     end
   end
 
@@ -97,6 +112,7 @@ class Miam::Client
   def walk_user(user_name, expected_attrs, actual_attrs)
     updated = walk_login_profile(user_name, expected_attrs[:login_profile], actual_attrs[:login_profile])
     updated = walk_user_groups(user_name, expected_attrs[:groups], actual_attrs[:groups]) || updated
+    updated = walk_attached_managed_policies(:user, user_name, expected_attrs[:attached_managed_policies], actual_attrs[:attached_managed_policies]) || updated
     walk_policies(:user, user_name, expected_attrs[:policies], actual_attrs[:policies]) || updated
   end
 
@@ -182,7 +198,8 @@ class Miam::Client
   end
 
   def walk_group(group_name, expected_attrs, actual_attrs)
-    walk_policies(:group, group_name, expected_attrs[:policies], actual_attrs[:policies])
+    updated = walk_policies(:group, group_name, expected_attrs[:policies], actual_attrs[:policies])
+    walk_attached_managed_policies(:group, group_name, expected_attrs[:attached_managed_policies], actual_attrs[:attached_managed_policies]) || updated
   end
 
   def walk_roles(expected, actual, instance_profile_roles)
@@ -232,6 +249,7 @@ class Miam::Client
 
     updated = walk_assume_role_policy(role_name, expected_attrs[:assume_role_policy_document], actual_attrs[:assume_role_policy_document])
     updated = walk_role_instance_profiles(role_name, expected_attrs[:instance_profiles], actual_attrs[:instance_profiles]) || updated
+    updated = walk_attached_managed_policies(:role, role_name, expected_attrs[:attached_managed_policies], actual_attrs[:attached_managed_policies]) || updated
     walk_policies(:role, role_name, expected_attrs[:policies], actual_attrs[:policies]) || updated
   end
 
@@ -389,13 +407,43 @@ class Miam::Client
     updated
   end
 
+  def walk_attached_managed_policies(type, name, expected_attached_managed_policies, actual_attached_managed_policies)
+    expected_attached_managed_policies = expected_attached_managed_policies.sort
+    actual_attached_managed_policies = actual_attached_managed_policies.sort
+    updated = false
+
+    if expected_attached_managed_policies != actual_attached_managed_policies
+      add_attached_managed_policies = expected_attached_managed_policies - actual_attached_managed_policies
+      remove_attached_managed_policies = actual_attached_managed_policies - expected_attached_managed_policies
+
+      unless add_attached_managed_policies.empty?
+        @driver.attach_policies(type, name, add_attached_managed_policies)
+      end
+
+      unless remove_attached_managed_policies.empty?
+        @driver.detach_policies(type, name, remove_attached_managed_policies)
+      end
+
+      updated = true
+    end
+
+    updated
+  end
+
+
   def load_file(file)
     if file.kind_of?(String)
       open(file) do |f|
-        Miam::DSL.parse(f.read, file)
+        exec_by_format(
+          :ruby => proc { Miam::DSL.parse(f.read, file) },
+          :json => proc { load_json(f) }
+        )
       end
     elsif file.respond_to?(:read)
-      Miam::DSL.parse(file.read, file.path)
+      exec_by_format(
+        :ruby => proc { Miam::DSL.parse(file.read, file.path) },
+        :json => proc { load_json(f) }
+      )
     else
       raise TypeError, "can't convert #{file} into File"
     end
@@ -407,5 +455,38 @@ class Miam::Client
     else
       true
     end
+  end
+
+  def exec_by_format(proc_by_format)
+    format_proc = proc_by_format[@options[:format]]
+    raise "Invalid format: #{@options[:format]}" unless format_proc
+    format_proc.call
+  end
+
+  def load_json(json)
+    json = JSON.load(json)
+    normalized = {}
+
+    json.each do |top_key, top_value|
+      normalized[top_key.to_sym] = top_attrs = {}
+
+      top_value.each do |second_key, second_value|
+        top_attrs[second_key] = second_attrs = {}
+
+        second_value.each do |third_key, third_value|
+          third_key = third_key.to_sym
+
+          if third_key == :login_profile
+            new_third_value = {}
+            third_value.each {|k, v| new_third_value[k.to_sym] = v }
+            third_value = new_third_value
+          end
+
+          second_attrs[third_key] = third_value
+        end
+      end
+    end
+
+    normalized
   end
 end

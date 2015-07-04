@@ -52,6 +52,7 @@ class Miam::Exporter
       groups = user.group_list
       policies = export_user_policies(user)
       login_profile = export_login_profile(user_name)
+      attached_managed_policies = user.attached_managed_policies.map(&:policy_arn)
 
       @mutex.synchronize do
         groups.each do |group_name|
@@ -63,6 +64,7 @@ class Miam::Exporter
           :path => user.path,
           :groups => groups,
           :policies => policies,
+          :attached_managed_policies => attached_managed_policies
         }
 
         if login_profile
@@ -102,11 +104,13 @@ class Miam::Exporter
     Parallel.each(groups, :in_threads => @concurrency) do |group|
       group_name = group.group_name
       policies = export_group_policies(group)
+      attached_managed_policies = group.attached_managed_policies.map(&:policy_arn)
 
       @mutex.synchronize do
         result[group_name] = {
           :path => group.path,
           :policies => policies,
+          :attached_managed_policies => attached_managed_policies,
         }
 
         progress
@@ -134,6 +138,7 @@ class Miam::Exporter
       role_name = role.role_name
       instance_profiles = role.instance_profile_list.map {|i| i.instance_profile_name }
       policies = export_role_policies(role)
+      attached_managed_policies = role.attached_managed_policies.map(&:policy_arn)
 
       @mutex.synchronize do
         instance_profiles.each do |instance_profile_name|
@@ -148,6 +153,7 @@ class Miam::Exporter
           :assume_role_policy_document => JSON.parse(document),
           :instance_profiles => instance_profiles,
           :policies => policies,
+          :attached_managed_policies => attached_managed_policies,
         }
 
         progress

@@ -58,6 +58,7 @@ Usage: miam [options]
     -o, --output FILE
         --split
         --split-more
+        --format=FORMAT
         --export-concurrency N
         --target REGEXP
         --no-color
@@ -86,6 +87,10 @@ user "bob", :path => "/developer/" do
         "Effect"=>"Allow",
         "Resource"=>"*"}]}
   end
+
+  attached_managed_policies(
+    # attached_managed_policy
+  )
 end
 
 user "mary", :path => "/staff/" do
@@ -114,6 +119,11 @@ user "mary", :path => "/staff/" do
         "Effect"=>"Allow",
         "Resource"=>"*"}]}
   end
+
+  attached_managed_policies(
+    "arn:aws:iam::aws:policy/AdministratorAccess",
+    "arn:aws:iam::123456789012:policy/my_policy"
+  )
 end
 
 group "Admin", :path => "/admin/" do

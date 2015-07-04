@@ -13,9 +13,14 @@ file = DEFAULT_FILENAME
 output_file = '-'
 account_output = 'account.csv'
 split = false
+MAGIC_COMMENT = <<-EOS
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+EOS
 
 options = {
   :dry_run => false,
+  :format  => :ruby,
   :color   => true,
   :debug   => false,
 }
@@ -29,6 +34,7 @@ ARGV.options do |opt|
     region = nil
     profile_name = nil
     credentials_path = nil
+    format_passed = false
 
     opt.on('-p', '--profile PROFILE_NAME')          {|v| profile_name                 = v                                     }
     opt.on(''  , '--credentials-path PATH')         {|v| credentials_path             = v                                     }
@@ -43,6 +49,7 @@ ARGV.options do |opt|
     opt.on('-o', '--output FILE')                   {|v| output_file                  = v                                     }
     opt.on(''  , '--split')                         {    split                        = true                                  }
     opt.on(''  , '--split-more')                    {    split                        = :more                                 }
+    opt.on('',   '--format=FORMAT', [:ruby, :json]) {|v| format_passed = true; options[:format] = v                           }
     opt.on(''  , '--export-concurrency N', Integer) {|v| options[:export_concurrency] = v                                     }
     opt.on(''  , '--target REGEXP')                 {|v| options[:target]             = Regexp.new(v)                         }
     opt.on(''  , '--no-color')                      {    options[:color]              = false                                 }
@@ -70,6 +77,10 @@ ARGV.options do |opt|
 
     aws_opts[:region] = region if region
     Aws.config.update(aws_opts)
+
+    if not format_passed and [file, output_file].any? {|i| i =~ /\.json\z/ }
+      options[:format] = :json
+    end
   rescue => e
     $stderr.puts("[ERROR] #{e.message}")
     exit 1
@@ -97,9 +108,9 @@ begin
       output_file = DEFAULT_FILENAME if output_file == '-'
       requires = []
 
-      client.export(:split_more => (split == :more)) do |args|
+      client.export(:split_more => (split == :more), :convert => (options[:format] == :ruby)) do |args|
         type, dsl = args.values_at(:type, :dsl)
-        next if dsl.strip.empty?
+        next if dsl.empty?
 
         type = type.to_s
         dir = File.dirname(output_file)
@@ -117,27 +128,41 @@ begin
           requires << iam_filename
         end
 
+        if options[:format] == :json
+          iam_file << '.json'
+        end
+
         logger.info("  write `#{iam_file}`")
 
         open(iam_file, 'wb') do |f|
+          f.puts MAGIC_COMMENT if options[:format] == :ruby
           f.puts dsl
         end
       end
 
-      logger.info("  write `#{output_file}`")
+      if options[:format] == :ruby
+        logger.info("  write `#{output_file}`")
 
-      open(output_file, 'wb') do |f|
-        requires.each do |iam_file|
-          f.puts "require '#{iam_file}'"
+        open(output_file, 'wb') do |f|
+          f.puts MAGIC_COMMENT
+
+          requires.each do |iam_file|
+            f.puts "require '#{iam_file}'"
+          end
         end
       end
     else
+      exported = client.export(:convert => (options[:format] == :ruby))
+
       if output_file == '-'
         logger.info('# Export IAM')
-        puts client.export.strip
+        puts exported
       else
         logger.info("Export IAM to `#{output_file}`")
-        open(output_file, 'wb') {|f| f.puts client.export.strip }
+        open(output_file, 'wb') do |f|
+          f.puts MAGIC_COMMENT if options[:format] == :ruby
+          f.puts exported
+        end
       end
     end
   when :apply

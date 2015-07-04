@@ -17,7 +17,7 @@ class Miam::Driver
       @iam.create_user(params)
     end
 
-    new_user_attrs = {:groups => [], :policies => {}}
+    new_user_attrs = {:groups => [], :policies => {}, :attached_managed_policies => []}
     new_user_attrs[:path] = attrs[:path] if attrs[:path]
     new_user_attrs
   end
@@ -52,6 +52,10 @@ class Miam::Driver
 
       attrs[:groups].each do |group_name|
         @iam.remove_user_from_group(:group_name => group_name, :user_name => user_name)
+      end
+
+      attrs[:attached_managed_policies].each do |policy_arn|
+        @iam.detach_user_policy(:user_name => user_name, :policy_arn => policy_arn)
       end
 
       list_access_key_ids(user_name).each do |access_key_id|
@@ -130,7 +134,7 @@ class Miam::Driver
       @iam.create_group(params)
     end
 
-    new_group_attrs = {:policies => {}}
+    new_group_attrs = {:policies => {}, :attached_managed_policies => []}
     new_group_attrs[:path] = attrs[:path] if attrs[:path]
     new_group_attrs
   end
@@ -145,6 +149,10 @@ class Miam::Driver
 
       users_in_group.each do |user_name|
         @iam.remove_user_from_group(:group_name => group_name, :user_name => user_name)
+      end
+
+      attrs[:attached_managed_policies].each do |policy_arn|
+        @iam.detach_group_policy(:group_name => group_name, :policy_arn => policy_arn)
       end
 
       @iam.delete_group(:group_name => group_name)
@@ -168,7 +176,8 @@ class Miam::Driver
     new_role_attrs = {
       :instance_profiles => [],
       :assume_role_policy_document => assume_role_policy_document,
-      :policies => {}
+      :policies => {},
+      :attached_managed_policies => [],
     }
 
     new_role_attrs[:path] = attrs[:path] if attrs[:path]
@@ -185,6 +194,10 @@ class Miam::Driver
 
       instance_profile_names.each do |instance_profile_name|
         @iam.remove_role_from_instance_profile(:instance_profile_name => instance_profile_name, :role_name => role_name)
+      end
+
+      attrs[:attached_managed_policies].each do |policy_arn|
+        @iam.detach_role_policy(:role_name => role_name, :policy_arn => policy_arn)
       end
 
       @iam.delete_role(:role_name => role_name)
@@ -226,7 +239,7 @@ class Miam::Driver
   end
 
   def create_instance_profile(instance_profile_name, attrs)
-    log(:info, "Create InstanceIrofile `#{instance_profile_name}`", :color => :cyan)
+    log(:info, "Create InstanceProfile `#{instance_profile_name}`", :color => :cyan)
 
     unless_dry_run do
       params = {:instance_profile_name => instance_profile_name}
@@ -302,6 +315,34 @@ class Miam::Driver
 
       params["#{type}_name".to_sym] = user_or_group_name
       @iam.send("put_#{type}_policy", params)
+    end
+  end
+
+  def attach_policies(type, name, policies)
+    type = type.to_s
+    type_s = type.slice(0, 1).upcase + type.slice(1..-1)
+
+    log(:info, "Update #{type_s} `#{name}`", :color => :green)
+    log(:info, "  attach policies=#{policies.join(',')}", :color => :green)
+
+    unless_dry_run do
+      policies.each do |arn|
+        @iam.send("attach_#{type}_policy", :"#{type}_name" => name, :policy_arn => arn)
+      end
+    end
+  end
+
+  def detach_policies(type, name, policies)
+    type = type.to_s
+    type_s = type.slice(0, 1).upcase + type.slice(1..-1)
+
+    log(:info, "Update #{type_s} `#{name}`", :color => :green)
+    log(:info, "  detach policies=#{policies.join(',')}", :color => :green)
+
+    unless_dry_run do
+      policies.each do |arn|
+        @iam.send("detach_#{type}_policy", :"#{type}_name" => name, :policy_arn => arn)
+      end
     end
   end
 

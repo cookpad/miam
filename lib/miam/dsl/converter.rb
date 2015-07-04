@@ -36,6 +36,8 @@ user #{user_name.inspect}, #{Miam::Utils.unbrace(user_options.inspect)} do
   #{output_user_groups(attrs[:groups])}
 
   #{output_policies(attrs[:policies])}
+
+  #{output_attached_managed_policies(attrs[:attached_managed_policies])}
 end
     EOS
   end
@@ -72,6 +74,8 @@ end
     <<-EOS
 group #{group_name.inspect}, #{Miam::Utils.unbrace(group_options.inspect)} do
   #{output_policies(attrs[:policies])}
+
+  #{output_attached_managed_policies(attrs[:attached_managed_policies])}
 end
     EOS
   end
@@ -93,6 +97,8 @@ role #{role_name.inspect}, #{Miam::Utils.unbrace(role_options.inspect)} do
   #{output_assume_role_policy_document(attrs[:assume_role_policy_document])}
 
   #{output_policies(attrs[:policies])}
+
+  #{output_attached_managed_policies(attrs[:attached_managed_policies])}
 end
     EOS
   end
@@ -153,6 +159,17 @@ instance_profile #{instance_profile_name.inspect}, #{Miam::Utils.unbrace(instanc
     #{policy_document}
   end
     EOS
+  end
+
+  def output_attached_managed_policies(attached_managed_policies)
+    if attached_managed_policies.empty?
+      attached_managed_policies = ['# attached_managed_policy']
+    else
+      attached_managed_policies = attached_managed_policies.map {|i| i.inspect }
+    end
+
+    attached_managed_policies = "\n    " + attached_managed_policies.join(",\n    ") + "\n  "
+    "attached_managed_policies(#{attached_managed_policies})"
   end
 
   def target_matched?(name)
