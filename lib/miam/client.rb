@@ -133,7 +133,7 @@ class Miam::Client
       @driver.delete_login_profile(user_name)
       updated = true
     elsif expected_login_profile != actual_login_profile
-      @driver.update_login_profile(user_name, expected_login_profile)
+      @driver.update_login_profile(user_name, expected_login_profile, actual_login_profile)
       updated = true
     end
 

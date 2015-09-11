@@ -91,12 +91,12 @@ class Miam::Driver
     end
   end
 
-  def update_login_profile(user_name, attrs)
+  def update_login_profile(user_name, attrs, old_attrs)
     log_attrs = attrs.dup
     log_attrs.delete(:password)
 
     log(:info, "Update User `#{user_name}`", :color => :green)
-    log(:info, "  update login profile: #{log_attrs.inspect}", :color => :green)
+    log(:info, "  login profile:\n".green + Miam::Utils.diff(old_attrs, attrs, :color => @options[:color], :indent => '    '), :color => false)
 
     unless_dry_run do
       @iam.update_login_profile(attrs.merge(:user_name => user_name))
