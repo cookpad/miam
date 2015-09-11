@@ -400,7 +400,7 @@ class Miam::Client
     updated = false
 
     if expected_document != actual_document
-      @driver.update_policy(type, user_or_group_name, policy_name, expected_document)
+      @driver.update_policy(type, user_or_group_name, policy_name, expected_document, actual_document)
       updated = true
     end
 

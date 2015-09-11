@@ -9,6 +9,7 @@ require 'aws-sdk-core'
 require 'ruby-progressbar'
 require 'parallel'
 require 'term/ansicolor'
+require 'diffy'
 
 module Miam; end
 require 'miam/logger'

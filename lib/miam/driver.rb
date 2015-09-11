@@ -289,9 +289,9 @@ class Miam::Driver
     put_policy(type, user_or_group_name, policy_name, policy_document)
   end
 
-  def update_policy(type, user_or_group_name, policy_name, policy_document)
+  def update_policy(type, user_or_group_name, policy_name, policy_document, old_policy_document)
     log(:info, "Update #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}` > Policy `#{policy_name}`", :color => :green)
-    log(:info, "  #{policy_document.pretty_inspect.gsub("\n", "\n  ").strip}", :color => :green)
+    log(:info, Miam::Utils.diff(old_policy_document, policy_document, :color => @options[:color], :indent => '  '), :color => false)
     put_policy(type, user_or_group_name, policy_name, policy_document)
   end
 
