@@ -226,9 +226,9 @@ class Miam::Driver
     end
   end
 
-  def update_assume_role_policy(role_name, policy_document)
+  def update_assume_role_policy(role_name, policy_document, old_policy_document)
     log(:info, "Update Role `#{role_name}` > AssumeRolePolicy", :color => :green)
-    log(:info, "  #{policy_document.pretty_inspect.gsub("\n", "\n  ").strip}", :color => :green)
+    log(:info, Miam::Utils.diff(old_policy_document, policy_document, :color => @options[:color]), :color => false)
 
     unless_dry_run do
       @iam.update_assume_role_policy(
@@ -291,7 +291,7 @@ class Miam::Driver
 
   def update_policy(type, user_or_group_name, policy_name, policy_document, old_policy_document)
     log(:info, "Update #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}` > Policy `#{policy_name}`", :color => :green)
-    log(:info, Miam::Utils.diff(old_policy_document, policy_document, :color => @options[:color], :indent => '  '), :color => false)
+    log(:info, Miam::Utils.diff(old_policy_document, policy_document, :color => @options[:color]), :color => false)
     put_policy(type, user_or_group_name, policy_name, policy_document)
   end
 

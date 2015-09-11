@@ -257,7 +257,7 @@ class Miam::Client
     updated = false
 
     if expected_assume_role_policy != actual_assume_role_policy
-      @driver.update_assume_role_policy(role_name, expected_assume_role_policy)
+      @driver.update_assume_role_policy(role_name, expected_assume_role_policy, actual_assume_role_policy)
       updated = true
     end
 
