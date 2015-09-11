@@ -266,13 +266,13 @@ class Miam::Driver
 
   def update_name(type, user_or_group_name, new_name)
     log(:info, "Update #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}`", :color => :green)
-    log(:info, "  set name=#{new_name}", :color => :green)
+    log(:info, "  name:\n".green + Miam::Utils.diff(user_or_group_name, new_name, :color => @options[:color], :indent => '    '), :color => false)
     update_user_or_group(type, user_or_group_name, "new_#{type}_name".to_sym => new_name)
   end
 
-  def update_path(type, user_or_group_name, new_path)
+  def update_path(type, user_or_group_name, new_path, old_path)
     log(:info, "Update #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}`", :color => :green)
-    log(:info, "  set path=#{new_path}", :color => :green)
+    log(:info, "  path:\n".green + Miam::Utils.diff(old_path, new_path, :color => @options[:color], :indent => '    '), :color => false)
     update_user_or_group(type, user_or_group_name, :new_path => new_path)
   end
 

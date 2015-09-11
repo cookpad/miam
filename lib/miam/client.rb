@@ -367,7 +367,7 @@ class Miam::Client
     updated = false
 
     if expected_path != actual_path
-      @driver.update_path(type, user_or_group_name, expected_path)
+      @driver.update_path(type, user_or_group_name, expected_path, actual_path)
       updated = true
     end
 
