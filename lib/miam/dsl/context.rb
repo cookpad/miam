@@ -1,4 +1,6 @@
 class Miam::DSL::Context
+  include Miam::TemplateHelper
+
   def self.eval(dsl, path, options = {})
     self.new(path, options) {
       eval(dsl, binding, path)
@@ -11,7 +13,18 @@ class Miam::DSL::Context
     @path = path
     @options = options
     @result = {:users => {}, :groups => {}, :roles => {}, :instance_profiles => {}}
+
+    @context = Hashie::Mash.new(
+      :path => path,
+      :options => options,
+      :templates => {}
+    )
+
     instance_eval(&block)
+  end
+
+  def template(name, &block)
+    @context.templates[name.to_s] = block
   end
 
   private
@@ -35,7 +48,7 @@ class Miam::DSL::Context
       raise "User `#{name}` is already defined"
     end
 
-    attrs = Miam::DSL::Context::User.new(name, &block).result
+    attrs = Miam::DSL::Context::User.new(@context, name, &block).result
     @result[:users][name] = user_options.merge(attrs)
   end
 
@@ -46,7 +59,7 @@ class Miam::DSL::Context
       raise "Group `#{name}` is already defined"
     end
 
-    attrs = Miam::DSL::Context::Group.new(name, &block).result
+    attrs = Miam::DSL::Context::Group.new(@context, name, &block).result
     @result[:groups][name] = group_options.merge(attrs)
   end
 
@@ -57,7 +70,7 @@ class Miam::DSL::Context
       raise "Role `#{name}` is already defined"
     end
 
-    attrs = Miam::DSL::Context::Role.new(name, &block).result
+    attrs = Miam::DSL::Context::Role.new(@context, name, &block).result
     @result[:roles][name] = role_options.merge(attrs)
   end
 

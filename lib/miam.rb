@@ -10,9 +10,11 @@ require 'ruby-progressbar'
 require 'parallel'
 require 'term/ansicolor'
 require 'diffy'
+require 'hashie'
 
 module Miam; end
 require 'miam/logger'
+require 'miam/template_helper'
 require 'miam/client'
 require 'miam/driver'
 require 'miam/dsl'
