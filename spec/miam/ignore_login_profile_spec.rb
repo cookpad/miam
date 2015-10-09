@@ -4,11 +4,6 @@ describe 'ignore login profile' do
       user "bob", :path=>"/devloper/" do
         login_profile :password_reset_required=>true
 
-        groups(
-          "Admin",
-          "SES"
-        )
-
         policy "S3" do
           {"Statement"=>
             [{"Action"=>
@@ -25,11 +20,6 @@ describe 'ignore login profile' do
     <<-RUBY
       user "bob", :path=>"/devloper/" do
         login_profile :password_reset_required=>false
-
-        groups(
-          "Admin",
-          "SES"
-        )
 
         policy "S3" do
           {"Statement"=>
@@ -48,7 +38,7 @@ describe 'ignore login profile' do
     {:users=>
       {"bob"=>
         {:path=>"/devloper/",
-         :groups=>["Admin", "SES"],
+         :groups=>[],
          :attached_managed_policies=>[],
          :policies=>
           {"S3"=>
