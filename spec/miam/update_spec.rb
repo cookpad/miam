@@ -171,8 +171,8 @@ describe 'update' do
             {"Statement"=>
               [{"Action"=>
                  ["s3:Get*",
-                  "s3:Put*",
-                  "s3:List*"],
+                  "s3:List*",
+                  "s3:Put*"],
                 "Effect"=>"Allow",
                 "Resource"=>"*"}]}
           end
@@ -209,8 +209,8 @@ describe 'update' do
             {"Statement"=>
               [{"Action"=>
                  ["s3:Get*",
-                  "s3:Put*",
-                  "s3:List*"],
+                  "s3:List*",
+                  "s3:Put*"],
                 "Effect"=>"Allow",
                 "Resource"=>"*"}]}
           end
