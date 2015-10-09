@@ -171,8 +171,8 @@ describe 'update' do
             {"Statement"=>
               [{"Action"=>
                  ["s3:Get*",
-                  "s3:List*",
-                  "s3:Put*"],
+                  "s3:Put*",
+                  "s3:List*"],
                 "Effect"=>"Allow",
                 "Resource"=>"*"}]}
           end
@@ -209,8 +209,8 @@ describe 'update' do
             {"Statement"=>
               [{"Action"=>
                  ["s3:Get*",
-                  "s3:List*",
-                  "s3:Put*"],
+                  "s3:Put*",
+                  "s3:List*"],
                 "Effect"=>"Allow",
                 "Resource"=>"*"}]}
           end
@@ -225,9 +225,9 @@ describe 'update' do
     it do
       updated = apply(subject) { update_policy_dsl }
       expect(updated).to be_truthy
-      expected[:users]["mary"][:policies]["S3"]["Statement"][0]["Action"] = ["s3:Get*", "s3:Put*", "s3:List*"]
+      expected[:users]["mary"][:policies]["S3"]["Statement"][0]["Action"] = ["s3:Get*", "s3:List*", "s3:Put*"]
       expected[:groups]["SES"][:policies]["ses-policy"]["Statement"][0]["Action"] = "*"
-      expected[:roles]["my-role"][:policies]["role-policy"]["Statement"][0]["Action"] = ["s3:Get*", "s3:Put*", "s3:List*"]
+      expected[:roles]["my-role"][:policies]["role-policy"]["Statement"][0]["Action"] = ["s3:Get*", "s3:List*", "s3:Put*"]
       expect(export).to eq expected
     end
   end
