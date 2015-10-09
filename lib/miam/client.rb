@@ -402,6 +402,8 @@ class Miam::Client
 
   def walk_policy(type, user_or_group_name, policy_name, expected_document, actual_document)
     updated = false
+    expected_document.sort_array!
+    actual_document.sort_array!
 
     if expected_document != actual_document
       @driver.update_policy(type, user_or_group_name, policy_name, expected_document, actual_document)

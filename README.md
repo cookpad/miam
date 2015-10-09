@@ -19,6 +19,7 @@ It defines the state of IAM using DSL, and updates IAM according to DSL.
   * Improve update (show diff)
   * Support Template
   * Add `--ignore-login-profile` option
+  * Sort policy array
 
 ## Installation
 
