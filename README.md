@@ -18,6 +18,7 @@ It defines the state of IAM using DSL, and updates IAM according to DSL.
 * `>= 0.2.2`
   * Improve update (show diff)
   * Support Template
+  * Add `--ignore-login-profile` option
 
 ## Installation
 
@@ -67,6 +68,7 @@ Usage: miam [options]
         --format=FORMAT
         --export-concurrency N
         --target REGEXP
+        --ignore-login-profile
         --no-color
         --no-progress
         --debug

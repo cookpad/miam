@@ -133,8 +133,12 @@ class Miam::Client
       @driver.delete_login_profile(user_name)
       updated = true
     elsif expected_login_profile != actual_login_profile
-      @driver.update_login_profile(user_name, expected_login_profile, actual_login_profile)
-      updated = true
+      if @options[:ignore_login_profile]
+        log(:warn, "User `#{user_name}`: difference of loging profile has been ignored: expected=#{expected_login_profile.inspect}, actual=#{actual_login_profile.inspect}", :color => :yellow)
+      else
+        @driver.update_login_profile(user_name, expected_login_profile, actual_login_profile)
+        updated = true
+      end
     end
 
     updated
