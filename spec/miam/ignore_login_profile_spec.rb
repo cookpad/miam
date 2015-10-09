@@ -39,14 +39,17 @@ describe 'ignore login profile' do
       {"bob"=>
         {:path=>"/devloper/",
          :groups=>[],
-         :attached_managed_policies=>[],
          :policies=>
           {"S3"=>
             {"Statement"=>
               [{"Action"=>["s3:Get*", "s3:List*", "s3:Put*"],
                 "Effect"=>"Allow",
                 "Resource"=>"*"}]}},
-         :login_profile=>{:password_reset_required=>true}}}}
+         :attached_managed_policies=>[],
+         :login_profile=>{:password_reset_required=>true}}},
+     :groups=>{},
+     :roles=>{},
+     :instance_profiles=>{}}
   end
 
   before(:each) do
