@@ -15,6 +15,9 @@ It defines the state of IAM using DSL, and updates IAM according to DSL.
 * `>= 0.2.1`
   * Support Managed Policy attach/detach
   * Support JSON format
+* `>= 0.2.2`
+  * Improve update (show diff)
+  * Support Template
 
 ## Installation
 
@@ -214,6 +217,71 @@ $ miam -a -f iam.json --dry-run
 Apply `iam.json` to IAM (dry-run)
    ᗧ 100%
 No change
+```
+
+## Use Template
+
+```ruby
+template "common-policy" do
+  policy "my-policy" do
+    {"Version"=>"2012-10-17",
+     "Statement"=>
+      [{"Action"=>
+         ["s3:Get*",
+          "s3:List*"],
+        "Effect"=>"Allow",
+        "Resource"=>"*"}]}
+  end
+end
+
+template "common-role-attrs" do
+  assume_role_policy_document do
+    {"Version"=>"2012-10-17",
+     "Statement"=>
+      [{"Sid"=>"",
+        "Effect"=>"Allow",
+        "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+        "Action"=>"sts:AssumeRole"}]}
+  end
+end
+
+user "bob", :path => "/developer/" do
+  login_profile :password_reset_required=>true
+
+  groups(
+    "Admin"
+  )
+
+  include_template "common-policy"
+end
+
+user "mary", :path => "/staff/" do
+  # login_profile :password_reset_required=>true
+
+  groups(
+    # no group
+  )
+
+  include_template "common-policy"
+
+  attached_managed_policies(
+    "arn:aws:iam::aws:policy/AdministratorAccess",
+    "arn:aws:iam::123456789012:policy/my_policy"
+  )
+end
+
+role "S3", :path => "/" do
+  instance_profiles(
+    "S3"
+  )
+
+  include_template "common-role-attrs"
+
+  policy "S3-role-policy" do
+    {"Version"=>"2012-10-17",
+     "Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+  end
+end
 ```
 
 ## Similar tools
