@@ -224,7 +224,7 @@ No change
 ```ruby
 template "common-policy" do
   policy "my-policy" do
-    {"Version"=>"2012-10-17",
+    {"Version"=>context.version,
      "Statement"=>
       [{"Action"=>
          ["s3:Get*",
@@ -236,7 +236,7 @@ end
 
 template "common-role-attrs" do
   assume_role_policy_document do
-    {"Version"=>"2012-10-17",
+    {"Version"=>context.version,
      "Statement"=>
       [{"Sid"=>"",
         "Effect"=>"Allow",
@@ -252,7 +252,7 @@ user "bob", :path => "/developer/" do
     "Admin"
   )
 
-  include_template "common-policy"
+  include_template "common-policy", version: "2012-10-17"
 end
 
 user "mary", :path => "/staff/" do
@@ -262,6 +262,7 @@ user "mary", :path => "/staff/" do
     # no group
   )
 
+  context.version = "2012-10-17"
   include_template "common-policy"
 
   attached_managed_policies(
