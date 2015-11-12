@@ -259,6 +259,8 @@ class Miam::Client
 
   def walk_assume_role_policy(role_name, expected_assume_role_policy, actual_assume_role_policy)
     updated = false
+    expected_assume_role_policy = recursively_sort_arrays_and_hashes(expected_assume_role_policy)
+    actual_assume_role_policy = recursively_sort_arrays_and_hashes(actual_assume_role_policy)
 
     if expected_assume_role_policy != actual_assume_role_policy
       @driver.update_assume_role_policy(role_name, expected_assume_role_policy, actual_assume_role_policy)
@@ -469,6 +471,17 @@ class Miam::Client
     format_proc.call
   end
 
+  def recursively_sort_arrays_and_hashes(obj)
+    case obj
+    when Array
+      obj.map!{|v| recursively_sort_arrays_and_hashes(v)}.sort_by!{|v| (v.to_s rescue nil) }
+    when Hash
+      obj = Hash[Hash[obj.map{|k,v| [recursively_sort_arrays_and_hashes(k),recursively_sort_arrays_and_hashes(v)]}].sort_by{|k,v| [(k.to_s rescue nil), (v.to_s rescue nil)]}]
+    else
+      obj
+    end
+  end
+
   def load_json(json)
     json = JSON.load(json)
     normalized = {}
@@ -492,6 +505,7 @@ class Miam::Client
         end
       end
     end
+
 
     normalized
   end
