@@ -91,12 +91,12 @@ class Miam::Driver
     end
   end
 
-  def update_login_profile(user_name, attrs)
+  def update_login_profile(user_name, attrs, old_attrs)
     log_attrs = attrs.dup
     log_attrs.delete(:password)
 
     log(:info, "Update User `#{user_name}`", :color => :green)
-    log(:info, "  update login profile: #{log_attrs.inspect}", :color => :green)
+    log(:info, "  login profile:\n".green + Miam::Utils.diff(old_attrs, attrs, :color => @options[:color], :indent => '    '), :color => false)
 
     unless_dry_run do
       @iam.update_login_profile(attrs.merge(:user_name => user_name))
@@ -226,9 +226,9 @@ class Miam::Driver
     end
   end
 
-  def update_assume_role_policy(role_name, policy_document)
+  def update_assume_role_policy(role_name, policy_document, old_policy_document)
     log(:info, "Update Role `#{role_name}` > AssumeRolePolicy", :color => :green)
-    log(:info, "  #{policy_document.pretty_inspect.gsub("\n", "\n  ").strip}", :color => :green)
+    log(:info, Miam::Utils.diff(old_policy_document, policy_document, :color => @options[:color]), :color => false)
 
     unless_dry_run do
       @iam.update_assume_role_policy(
@@ -266,13 +266,13 @@ class Miam::Driver
 
   def update_name(type, user_or_group_name, new_name)
     log(:info, "Update #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}`", :color => :green)
-    log(:info, "  set name=#{new_name}", :color => :green)
+    log(:info, "  name:\n".green + Miam::Utils.diff(user_or_group_name, new_name, :color => @options[:color], :indent => '    '), :color => false)
     update_user_or_group(type, user_or_group_name, "new_#{type}_name".to_sym => new_name)
   end
 
-  def update_path(type, user_or_group_name, new_path)
+  def update_path(type, user_or_group_name, new_path, old_path)
     log(:info, "Update #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}`", :color => :green)
-    log(:info, "  set path=#{new_path}", :color => :green)
+    log(:info, "  path:\n".green + Miam::Utils.diff(old_path, new_path, :color => @options[:color], :indent => '    '), :color => false)
     update_user_or_group(type, user_or_group_name, :new_path => new_path)
   end
 
@@ -289,9 +289,9 @@ class Miam::Driver
     put_policy(type, user_or_group_name, policy_name, policy_document)
   end
 
-  def update_policy(type, user_or_group_name, policy_name, policy_document)
+  def update_policy(type, user_or_group_name, policy_name, policy_document, old_policy_document)
     log(:info, "Update #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}` > Policy `#{policy_name}`", :color => :green)
-    log(:info, "  #{policy_document.pretty_inspect.gsub("\n", "\n  ").strip}", :color => :green)
+    log(:info, Miam::Utils.diff(old_policy_document, policy_document, :color => @options[:color]), :color => false)
     put_policy(type, user_or_group_name, policy_name, policy_document)
   end
 

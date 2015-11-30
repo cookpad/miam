@@ -1,6 +1,9 @@
 class Miam::DSL::Context::Role
-  def initialize(name, &block)
+  include Miam::TemplateHelper
+
+  def initialize(context, name, &block)
     @role_name = name
+    @context = context.merge(:role_name => name)
     @result = {:instance_profiles => [], :policies => {}, :attached_managed_policies => []}
     instance_eval(&block)
   end

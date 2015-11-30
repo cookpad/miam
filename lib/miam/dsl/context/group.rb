@@ -1,6 +1,9 @@
 class Miam::DSL::Context::Group
-  def initialize(name, &block)
+  include Miam::TemplateHelper
+
+  def initialize(context, name, &block)
     @group_name = name
+    @context = context.merge(:group_name => name)
     @result = {:policies => {}, :attached_managed_policies => []}
     instance_eval(&block)
   end

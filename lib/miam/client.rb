@@ -133,8 +133,12 @@ class Miam::Client
       @driver.delete_login_profile(user_name)
       updated = true
     elsif expected_login_profile != actual_login_profile
-      @driver.update_login_profile(user_name, expected_login_profile)
-      updated = true
+      if @options[:ignore_login_profile]
+        log(:warn, "User `#{user_name}`: difference of loging profile has been ignored: expected=#{expected_login_profile.inspect}, actual=#{actual_login_profile.inspect}", :color => :yellow)
+      else
+        @driver.update_login_profile(user_name, expected_login_profile, actual_login_profile)
+        updated = true
+      end
     end
 
     updated
@@ -255,9 +259,11 @@ class Miam::Client
 
   def walk_assume_role_policy(role_name, expected_assume_role_policy, actual_assume_role_policy)
     updated = false
+    expected_assume_role_policy.sort_array!
+    actual_assume_role_policy.sort_array!
 
     if expected_assume_role_policy != actual_assume_role_policy
-      @driver.update_assume_role_policy(role_name, expected_assume_role_policy)
+      @driver.update_assume_role_policy(role_name, expected_assume_role_policy, actual_assume_role_policy)
       updated = true
     end
 
@@ -367,7 +373,7 @@ class Miam::Client
     updated = false
 
     if expected_path != actual_path
-      @driver.update_path(type, user_or_group_name, expected_path)
+      @driver.update_path(type, user_or_group_name, expected_path, actual_path)
       updated = true
     end
 
@@ -398,9 +404,11 @@ class Miam::Client
 
   def walk_policy(type, user_or_group_name, policy_name, expected_document, actual_document)
     updated = false
+    expected_document.sort_array!
+    actual_document.sort_array!
 
     if expected_document != actual_document
-      @driver.update_policy(type, user_or_group_name, policy_name, expected_document)
+      @driver.update_policy(type, user_or_group_name, policy_name, expected_document, actual_document)
       updated = true
     end
 
@@ -486,6 +494,7 @@ class Miam::Client
         end
       end
     end
+
 
     normalized
   end

@@ -1,6 +1,9 @@
 class Miam::DSL::Context::User
-  def initialize(name, &block)
+  include Miam::TemplateHelper
+
+  def initialize(context, name, &block)
     @user_name = name
+    @context = context.merge(:user_name => name)
     @result = {:groups => [], :policies => {}, :attached_managed_policies => []}
     instance_eval(&block)
   end

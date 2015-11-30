@@ -6,7 +6,7 @@ It defines the state of IAM using DSL, and updates IAM according to DSL.
 
 [![Gem Version](https://badge.fury.io/rb/miam.svg)](http://badge.fury.io/rb/miam)
 [![Build Status](https://travis-ci.org/winebarrel/miam.svg?branch=master)](https://travis-ci.org/winebarrel/miam)
-[![Coverage Status](https://coveralls.io/repos/winebarrel/miam/badge.png?branch=master)](https://coveralls.io/r/winebarrel/miam?branch=master)
+[![Coverage Status](https://coveralls.io/repos/winebarrel/miam/badge.svg?branch=master&service=github)](https://coveralls.io/github/winebarrel/miam?branch=master)
 
 **Notice**
 
@@ -15,6 +15,11 @@ It defines the state of IAM using DSL, and updates IAM according to DSL.
 * `>= 0.2.1`
   * Support Managed Policy attach/detach
   * Support JSON format
+* `>= 0.2.2`
+  * Improve update (show diff)
+  * Support Template
+  * Add `--ignore-login-profile` option
+  * Sort policy array
 
 ## Installation
 
@@ -64,6 +69,7 @@ Usage: miam [options]
         --format=FORMAT
         --export-concurrency N
         --target REGEXP
+        --ignore-login-profile
         --no-color
         --no-progress
         --debug
@@ -214,6 +220,72 @@ $ miam -a -f iam.json --dry-run
 Apply `iam.json` to IAM (dry-run)
    ᗧ 100%
 No change
+```
+
+## Use Template
+
+```ruby
+template "common-policy" do
+  policy "my-policy" do
+    {"Version"=>context.version,
+     "Statement"=>
+      [{"Action"=>
+         ["s3:Get*",
+          "s3:List*"],
+        "Effect"=>"Allow",
+        "Resource"=>"*"}]}
+  end
+end
+
+template "common-role-attrs" do
+  assume_role_policy_document do
+    {"Version"=>context.version,
+     "Statement"=>
+      [{"Sid"=>"",
+        "Effect"=>"Allow",
+        "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+        "Action"=>"sts:AssumeRole"}]}
+  end
+end
+
+user "bob", :path => "/developer/" do
+  login_profile :password_reset_required=>true
+
+  groups(
+    "Admin"
+  )
+
+  include_template "common-policy", version: "2012-10-17"
+end
+
+user "mary", :path => "/staff/" do
+  # login_profile :password_reset_required=>true
+
+  groups(
+    # no group
+  )
+
+  context.version = "2012-10-17"
+  include_template "common-policy"
+
+  attached_managed_policies(
+    "arn:aws:iam::aws:policy/AdministratorAccess",
+    "arn:aws:iam::123456789012:policy/my_policy"
+  )
+end
+
+role "S3", :path => "/" do
+  instance_profiles(
+    "S3"
+  )
+
+  include_template "common-role-attrs"
+
+  policy "S3-role-policy" do
+    {"Version"=>"2012-10-17",
+     "Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+  end
+end
 ```
 
 ## Similar tools
