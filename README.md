@@ -200,7 +200,7 @@ user "bob", :path => "/developer/" do
 end
 ```
 
-## Custom Managed
+## Custom Managed Policy
 
 ```ruby
 managed_policy "my-policy", :path=>"/" do
