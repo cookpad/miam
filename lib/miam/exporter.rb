@@ -17,6 +17,7 @@ class Miam::Exporter
     users = account_authorization_details[:user_detail_list]
     groups = account_authorization_details[:group_detail_list]
     roles = account_authorization_details[:role_detail_list]
+    policies = account_authorization_details[:policies]
     instance_profiles = list_instance_profiles
     group_users = {}
     instance_profile_roles = {}
@@ -37,6 +38,7 @@ class Miam::Exporter
       :groups => export_groups(groups),
       :roles => export_roles(roles, instance_profile_roles),
       :instance_profiles => export_instance_profiles(instance_profiles),
+      :policies => export_policies(policies),
     }
 
     [expected, group_users, instance_profile_roles]
@@ -192,6 +194,41 @@ class Miam::Exporter
     result
   end
 
+  def export_policies(policies)
+    result = {}
+
+    Parallel.each(policies, :in_threads => @concurrency) do |policy|
+      policy_name = policy.policy_name
+      document = export_policy_document(policy)
+
+      result[policy_name] = {
+        :path => policy.path,
+        :document => document,
+      }
+    end
+
+    result
+  end
+
+  def export_policy_document(policy)
+    policy_version = nil
+
+    policy_version_list = policy.policy_version_list.sort_by do |pv|
+      pv.version_id[1..-1].to_i
+    end
+
+    policy_version_list.each do |pv|
+      policy_version = pv
+
+      if pv.is_default_version
+        break
+      end
+    end
+
+    document = CGI.unescape(policy_version.document)
+    JSON.parse(document)
+  end
+
   def list_instance_profiles
     @iam.list_instance_profiles.map {|resp|
       resp.instance_profiles.to_a
@@ -209,6 +246,7 @@ class Miam::Exporter
       :user_detail_list,
       :group_detail_list,
       :role_detail_list,
+      :policies,
     ]
 
     keys.each do |key|

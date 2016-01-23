@@ -14,6 +14,7 @@ class Miam::DSL::Converter
       output_groups(@exported[:groups]),
       output_roles(@exported[:roles]),
       output_instance_profiles(@exported[:instance_profiles]),
+      output_managed_policies(@exported[:policies]),
     ].join("\n")
   end
 
@@ -170,6 +171,25 @@ instance_profile #{instance_profile_name.inspect}, #{Miam::Utils.unbrace(instanc
 
     attached_managed_policies = "\n    " + attached_managed_policies.join(",\n    ") + "\n  "
     "attached_managed_policies(#{attached_managed_policies})"
+  end
+
+  def output_managed_policies(policies)
+    policies.each.sort_by {|k, v| k }.map {|policy_name, attrs|
+      next unless target_matched?(policy_name)
+      output_managed_policy(policy_name, attrs)
+    }.select {|i| i }.join("\n")
+  end
+
+  def output_managed_policy(policy_name, attrs)
+    policy_options = {:path => attrs[:path]}
+    policy_document = attrs[:document].pretty_inspect
+    policy_document.gsub!("\n", "\n    ").strip!
+
+    <<-EOS
+managed_policy #{policy_name.inspect}, #{Miam::Utils.unbrace(policy_options.inspect)} do
+  #{policy_document}
+end
+    EOS
   end
 
   def target_matched?(name)
