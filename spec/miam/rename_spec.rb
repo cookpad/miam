@@ -110,6 +110,7 @@ describe 'update' do
               [{"Effect"=>"Allow",
                 "Action"=>"ses:SendRawEmail",
                 "Resource"=>"*"}]}}}},
+     :policies => {},
      :roles=>
       {"my-role"=>
         {:path=>"/any/",

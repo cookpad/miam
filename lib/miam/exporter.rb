@@ -1,5 +1,7 @@
 # coding: utf-8
 class Miam::Exporter
+  AWS_MANAGED_POLICY_PREFIX = 'arn:aws:iam::aws:'
+
   def self.export(iam, options = {})
     self.new(iam, options).export
   end
@@ -198,6 +200,10 @@ class Miam::Exporter
     result = {}
 
     Parallel.each(policies, :in_threads => @concurrency) do |policy|
+      if policy.arn.start_with?(AWS_MANAGED_POLICY_PREFIX)
+        next
+      end
+
       policy_name = policy.policy_name
       document = export_policy_document(policy)
 

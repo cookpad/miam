@@ -110,6 +110,7 @@ describe 'delete' do
               [{"Effect"=>"Allow",
                 "Action"=>"ses:SendRawEmail",
                 "Resource"=>"*"}]}}}},
+     :policies => {},
      :roles=>
       {"my-role"=>
         {:path=>"/any/",

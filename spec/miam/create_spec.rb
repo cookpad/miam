@@ -5,7 +5,7 @@ describe 'create' do
     it do
       updated = apply(subject) { '' }
       expect(updated).to be_falsey
-      expect(export).to eq({:users=>{}, :groups=>{}, :roles=>{}, :instance_profiles=>{}})
+      expect(export).to eq({:users=>{}, :groups=>{}, :roles=>{}, :instance_profiles=>{}, :policies => {}})
     end
   end
 
@@ -124,6 +124,7 @@ describe 'create' do
                   [{"Effect"=>"Allow",
                     "Action"=>"ses:SendRawEmail",
                     "Resource"=>"*"}]}}}},
+         :policies => {},
          :roles=>
           {"my-role"=>
             {:path=>"/any/",
@@ -259,7 +260,7 @@ describe 'create' do
       it do
         updated = apply(subject) { dsl }
         expect(updated).to be_falsey
-        expect(export).to eq({:users=>{}, :groups=>{}, :roles=>{}, :instance_profiles=>{}})
+        expect(export).to eq({:users=>{}, :groups=>{}, :roles=>{}, :instance_profiles=>{}, :policies => {}})
       end
     end
   end

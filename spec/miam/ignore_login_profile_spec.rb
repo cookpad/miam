@@ -48,6 +48,7 @@ describe 'ignore login profile' do
          :attached_managed_policies=>[],
          :login_profile=>{:password_reset_required=>true}}},
      :groups=>{},
+     :policies=>{},
      :roles=>{},
      :instance_profiles=>{}}
   end
