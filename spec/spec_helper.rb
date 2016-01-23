@@ -16,6 +16,8 @@ Aws.config.update(
   secret_access_key: ENV['MIAM_TEST_SECRET_ACCESS_KEY'] || 'tiger'
 )
 
+MIAM_TEST_ACCOUNT_ID = Aws::IAM::Client.new.get_user.user.user_id
+
 RSpec.configure do |config|
   config.before(:each) do
     apply { '' }
