@@ -381,11 +381,23 @@ class Miam::Driver
     log(:info, "Delete ManagedPolicy `#{policy_name}`", :color => :red)
 
     unless_dry_run do
-      params = {
+      policy_versions = @iam.list_policy_versions(
         :policy_arn => policy_arn(policy_name),
+        :max_items => MAX_POLICY_VERSIONS
+      )
+
+      policy_versions.versions.reject {|pv|
+        pv.is_default_version
+      }.each {|pv|
+        @iam.delete_policy_version(
+          :policy_arn => policy_arn(policy_name),
+          :version_id => pv.version_id
+        )
       }
 
-      @iam.delete_policy(params)
+      @iam.delete_policy(
+        :policy_arn => policy_arn(policy_name)
+      )
     end
   end
 
