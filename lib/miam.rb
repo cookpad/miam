@@ -6,6 +6,8 @@ require 'singleton'
 require 'thread'
 
 require 'aws-sdk-core'
+Aws.use_bundled_cert!
+
 require 'ruby-progressbar'
 require 'parallel'
 require 'term/ansicolor'
