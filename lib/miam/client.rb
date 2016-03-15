@@ -11,6 +11,7 @@ class Miam::Client
 
   def export(export_options = {})
     exported, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options)
+    exported.sort_array!
 
     if block_given?
       [:users, :groups, :roles, :instance_profiles, :policies].each do |type|
