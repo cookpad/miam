@@ -1,3 +1,3 @@
 module Miam
-  VERSION = '0.2.3.beta3'
+  VERSION = '0.2.3'
 end
