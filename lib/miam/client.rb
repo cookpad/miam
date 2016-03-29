@@ -11,10 +11,11 @@ class Miam::Client
 
   def export(export_options = {})
     exported, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options)
+    exported.sort_array!
 
     if block_given?
-      [:users, :groups, :roles, :instance_profiles].each do |type|
-        splitted = {:users => {}, :groups => {}, :roles => {}, :instance_profiles => {}}
+      [:users, :groups, :roles, :instance_profiles, :policies].each do |type|
+        splitted = {:users => {}, :groups => {}, :roles => {}, :instance_profiles => {}, :policies => {}}
 
         if export_options[:split_more]
           exported[type].sort_by {|k, v| k }.each do |name, attrs|
@@ -58,10 +59,12 @@ class Miam::Client
     expected = load_file(file)
 
     actual, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options)
-    updated = walk_groups(expected[:groups], actual[:groups], actual[:users], group_users)
+    updated = pre_walk_managed_policies(expected[:policies], actual[:policies])
+    updated = walk_groups(expected[:groups], actual[:groups], actual[:users], group_users) || updated
     updated = walk_users(expected[:users], actual[:users], group_users) || updated
     updated = walk_instance_profiles(expected[:instance_profiles], actual[:instance_profiles], actual[:roles], instance_profile_roles) || updated
     updated = walk_roles(expected[:roles], actual[:roles], instance_profile_roles) || updated
+    updated = post_walk_managed_policies(actual[:policies]) || updated
 
     if @options[:dry_run]
       false
@@ -438,6 +441,50 @@ class Miam::Client
     updated
   end
 
+  def pre_walk_managed_policies(expected, actual)
+    updated = false
+
+    expected.each do |policy_name, expected_attrs|
+      actual_attrs = actual.delete(policy_name)
+
+      if actual_attrs
+        if expected_attrs[:path] != actual_attrs[:path]
+          log(:warn, "ManagedPolicy `#{policy_name}`: 'path' cannot be updated", :color => :yellow)
+        end
+
+        updated = walk_managed_policy(policy_name, expected_attrs[:document], actual_attrs[:document]) || updated
+      else
+        @driver.create_managed_policy(policy_name, expected_attrs)
+        updated = true
+      end
+    end
+
+    updated
+  end
+
+  def walk_managed_policy(policy_name, expected_document, actual_document)
+    updated = false
+    expected_document.sort_array!
+    actual_document.sort_array!
+
+    if expected_document != actual_document
+      @driver.update_managed_policy(policy_name, expected_document, actual_document)
+      updated = true
+    end
+
+    updated
+  end
+
+  def post_walk_managed_policies(actual)
+    updated = false
+
+    actual.each do |policy_name, actual_attrs|
+      @driver.delete_managed_policy(policy_name)
+      updated = true
+    end
+
+    updated
+  end
 
   def load_file(file)
     if file.kind_of?(String)
@@ -494,7 +541,6 @@ class Miam::Client
         end
       end
     end
-
 
     normalized
   end

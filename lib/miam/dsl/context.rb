@@ -12,7 +12,7 @@ class Miam::DSL::Context
   def initialize(path, options = {}, &block)
     @path = path
     @options = options
-    @result = {:users => {}, :groups => {}, :roles => {}, :instance_profiles => {}}
+    @result = {:users => {}, :groups => {}, :roles => {}, :instance_profiles => {}, :policies => {}}
 
     @context = Hashie::Mash.new(
       :path => path,
@@ -82,5 +82,16 @@ class Miam::DSL::Context
     end
 
     @result[:instance_profiles][name] = instance_profile_options
+  end
+
+  def managed_policy(name, policy_options = {}, &block)
+    name = name.to_s
+
+    if @result[:policies][name]
+      raise "ManagedPolicy `#{name}` is already defined"
+    end
+
+    attrs = Miam::DSL::Context::ManagedPolicy.new(@context, name, &block).result
+    @result[:policies][name] = policy_options.merge(attrs)
   end
 end

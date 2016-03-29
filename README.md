@@ -20,6 +20,8 @@ It defines the state of IAM using DSL, and updates IAM according to DSL.
   * Support Template
   * Add `--ignore-login-profile` option
   * Sort policy array
+* `>= 0.2.3`
+  * Support Custom Managed Policy
 
 ## Installation
 
@@ -194,6 +196,32 @@ user "bob", :path => "/developer/" do
 
   attached_managed_policies(
     "arn:aws:iam::aws:policy/AmazonElastiCacheReadOnlyAccess"
+  )
+end
+```
+
+## Custom Managed Policy
+
+```ruby
+managed_policy "my-policy", :path=>"/" do
+  {"Version"=>"2012-10-17",
+   "Statement"=>
+    [{"Effect"=>"Allow", "Action"=>"directconnect:Describe*", "Resource"=>"*"}]}
+end
+
+user "bob", :path => "/developer/" do
+  login_profile :password_reset_required=>true
+
+  groups(
+    "Admin"
+  )
+
+  policy "bob-policy" do
+    # ...
+  end
+
+  attached_managed_policies(
+    "arn:aws:iam::123456789012:policy/my-policy"
   )
 end
 ```

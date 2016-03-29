@@ -6,6 +6,8 @@ require 'singleton'
 require 'thread'
 
 require 'aws-sdk-core'
+Aws.use_bundled_cert!
+
 require 'ruby-progressbar'
 require 'parallel'
 require 'term/ansicolor'
@@ -22,6 +24,7 @@ require 'miam/driver'
 require 'miam/dsl'
 require 'miam/dsl/context'
 require 'miam/dsl/context/group'
+require 'miam/dsl/context/managed_policy'
 require 'miam/dsl/context/role'
 require 'miam/dsl/context/user'
 require 'miam/dsl/converter'
