@@ -455,16 +455,7 @@ class Miam::Driver
     yield unless @options[:dry_run]
   end
 
-  def account_id
-    if not @account_id
-        resp = @iam.list_users({max_items: 1})
-        arn = resp.users[0].arn
-        @account_id = arn.match('^arn:aws:iam::([0-9]{12}):.*$')[1]
-    end
-    @account_id
-  end
-
   def policy_arn(policy_name)
-    "arn:aws:iam::#{account_id}:policy/#{policy_name}"
+    "arn:aws:iam::#{@iam.get_user.user.user_id}:policy/#{policy_name}"
   end
 end
