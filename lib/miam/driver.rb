@@ -455,7 +455,12 @@ class Miam::Driver
     yield unless @options[:dry_run]
   end
 
+  def account_id
+    # https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+    @account_id ||= @iam.get_user.user.arn.split(':')[4]
+  end
+
   def policy_arn(policy_name)
-    "arn:aws:iam::#{@iam.get_user.user.user_id}:policy/#{policy_name}"
+    "arn:aws:iam::#{account_id}:policy/#{policy_name}"
   end
 end
