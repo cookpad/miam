@@ -457,7 +457,7 @@ class Miam::Driver
 
   def account_id
     # https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
-    @account_id ||= @iam.get_user.user.arn.split(':')[4]
+    @account_id ||= @iam.get_user.user.arn.split(':').fetch(4)
   end
 
   def policy_arn(policy_name)
