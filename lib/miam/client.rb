@@ -452,7 +452,7 @@ class Miam::Client
           log(:warn, "ManagedPolicy `#{policy_name}`: 'path' cannot be updated", :color => :yellow)
         end
 
-        updated = walk_managed_policy(policy_name, expected_attrs[:document], actual_attrs[:document]) || updated
+        updated = walk_managed_policy(policy_name, actual_attrs[:path], expected_attrs[:document], actual_attrs[:document]) || updated
       else
         @driver.create_managed_policy(policy_name, expected_attrs)
         updated = true
@@ -462,13 +462,13 @@ class Miam::Client
     updated
   end
 
-  def walk_managed_policy(policy_name, expected_document, actual_document)
+  def walk_managed_policy(policy_name, policy_path, expected_document, actual_document)
     updated = false
     expected_document.sort_array!
     actual_document.sort_array!
 
     if expected_document != actual_document
-      @driver.update_managed_policy(policy_name, expected_document, actual_document)
+      @driver.update_managed_policy(policy_name, policy_path, expected_document, actual_document)
       updated = true
     end
 
@@ -479,7 +479,7 @@ class Miam::Client
     updated = false
 
     actual.each do |policy_name, actual_attrs|
-      @driver.delete_managed_policy(policy_name)
+      @driver.delete_managed_policy(policy_name, actual_attrs[:path])
       updated = true
     end
 
