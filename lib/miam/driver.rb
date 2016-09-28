@@ -67,6 +67,14 @@ class Miam::Driver
         @iam.delete_signing_certificate(:user_name => user_name, :certificate_id => certificate_id)
       end
 
+      mfa_devices = @iam.list_mfa_devices(:user_name => user_name).map {|resp|
+        resp.mfa_devices
+      }.flatten
+
+      mfa_devices.each do |md|
+        @iam.deactivate_mfa_device(:user_name => user_name, :serial_number => md.serial_number)
+      end
+
       @iam.delete_user(:user_name => user_name)
     end
   end
