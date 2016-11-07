@@ -129,7 +129,7 @@ class Miam::Client
     end
 
     if expected_login_profile and not actual_login_profile
-      expected_login_profile[:password] ||= @password_manager.identify(user_name, :login_profile)
+      expected_login_profile[:password] ||= @password_manager.identify(user_name, :login_profile, @driver.password_policy)
       @driver.create_login_profile(user_name, expected_login_profile)
       updated = true
     elsif not expected_login_profile and actual_login_profile

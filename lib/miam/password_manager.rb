@@ -1,13 +1,19 @@
 class Miam::PasswordManager
   include Miam::Logger::Helper
 
+  LOWERCASES = ('a'..'z').to_a
+  UPPERCASES = ('A'..'Z').to_a
+  NUMBERS = ('0'..'9').to_a
+  SYMBOLS = "!@\#$%^&*()_+-=[]{}|'".split(//)
+
   def initialize(output, options = {})
     @output = output
     @options = options
   end
 
-  def identify(user, type)
-    password = mkpasswd
+  def identify(user, type, policy)
+    password = mkpasswd(policy)
+    log(:info, "mkpasswd: #{password}")
     puts_password(user, type, password)
     password
   end
@@ -22,8 +28,21 @@ class Miam::PasswordManager
 
   private
 
-  def mkpasswd(len = 8)
-    [*1..9, *'A'..'Z', *'a'..'z'].shuffle.slice(0, len).join
+  def mkpasswd(policy)
+    chars = []
+    len = 8
+
+    if policy
+      len = policy.minimum_password_length if policy.minimum_password_length > len
+      chars << LOWERCASES.shuffle.first if policy.require_lowercase_characters
+      chars << UPPERCASES.shuffle.first if policy.require_uppercase_characters
+      chars << NUMBERS.shuffle.first if policy.require_numbers
+      chars << SYMBOLS.shuffle.first if policy.require_symbols
+
+      len -= chars.length
+    end
+
+    (chars + [*1..9, *'A'..'Z', *'a'..'z'].shuffle.slice(0, len)).shuffle.join
   end
 
   def open_output

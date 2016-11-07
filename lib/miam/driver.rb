@@ -438,6 +438,14 @@ class Miam::Driver
     end
   end
 
+  def password_policy
+    return @password_policy if instance_variable_defined?(:@password_policy)
+
+    @password_policy = @iam.get_account_password_policy.password_policy
+  rescue Aws::IAM::Errors::NoSuchEntity
+    @password_policy = nil
+  end
+
   private
 
   def encode_document(policy_document)
