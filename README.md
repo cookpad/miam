@@ -22,6 +22,9 @@ It defines the state of IAM using DSL, and updates IAM according to DSL.
   * Sort policy array
 * `>= 0.2.3`
   * Support Custom Managed Policy
+* `>= 0.2.4`
+  * Fix for Password Policy ([RP#22](https://github.com/winebarrel/miam/pull/22))
+  * Fix `--target` option for Policies ([RP#21](https://github.com/winebarrel/miam/pull/21))
 
 ## Installation
 
