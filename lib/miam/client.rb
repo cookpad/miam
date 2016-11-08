@@ -445,6 +445,7 @@ class Miam::Client
     updated = false
 
     expected.each do |policy_name, expected_attrs|
+      next unless target_matched?(policy_name)
       actual_attrs = actual.delete(policy_name)
 
       if actual_attrs
@@ -479,6 +480,7 @@ class Miam::Client
     updated = false
 
     actual.each do |policy_name, actual_attrs|
+      next unless target_matched?(policy_name)
       @driver.delete_managed_policy(policy_name, actual_attrs[:path])
       updated = true
     end
