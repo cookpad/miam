@@ -255,24 +255,17 @@ class Miam::Exporter
       :policies,
     ]
 
-    key_by_filter = {
-      'User' => :user_detail_list,
-      'Role' => :role_detail_list,
-      'Group' => :group_detail_list,
-      'LocalManagedPolicy' => :policies
-    }
-
-    key_by_filter.values.each do |key|
+    keys.each do |key|
       account_authorization_details[key] = []
     end
 
-    Parallel.each(key_by_filter, :in_threads => @concurrency) do |filter, key|
-      @iam.get_account_authorization_details(:filter => [filter]).each do |resp|
+    @iam.get_account_authorization_details.each do |resp|
+      keys.each do |key|
         account_authorization_details[key].concat(resp[key])
+      end
 
-        unless @options[:no_progress]
-          progressbar.increment
-        end
+      unless @options[:no_progress]
+        progressbar.increment
       end
     end
 
