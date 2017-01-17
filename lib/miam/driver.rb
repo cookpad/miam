@@ -4,9 +4,11 @@ class Miam::Driver
   MAX_POLICY_SIZE = 2048
   MAX_POLICY_VERSIONS = 5
 
-  def initialize(iam, options = {})
+  def initialize(iam, sts, options = {})
     @iam = iam
+    @sts = sts
     @options = options
+    @account_id = nil
   end
 
   def create_user(user_name, attrs)
@@ -473,7 +475,8 @@ class Miam::Driver
 
   def account_id
     # https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
-    @account_id ||= @iam.get_user.user.arn.split(':').fetch(4)
+    # http://docs.aws.amazon.com/STS/latest/APIReference/API_GetCallerIdentity.html
+    @account_id ||= @sts.get_caller_identity.account
   end
 
   def policy_arn(policy_name, policy_path)
