@@ -5,7 +5,8 @@ class Miam::Client
     @options = {:format => :ruby}.merge(options)
     aws_config = options.delete(:aws_config) || {}
     @iam = Aws::IAM::Client.new(aws_config)
-    @driver = Miam::Driver.new(@iam, options)
+    @sts = Aws::STS::Client.new(aws_config)
+    @driver = Miam::Driver.new(@iam, @sts, options)
     @password_manager = options[:password_manager] || Miam::PasswordManager.new('-', options)
   end
 
