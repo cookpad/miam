@@ -508,11 +508,17 @@ class Miam::Client
   end
 
   def target_matched?(name)
-    if @options[:target]
-      name =~ @options[:target]
-    else
-      true
+    result = true
+
+    if @options[:exclude]
+      result &&= name !~ @options[:exclude]
     end
+
+    if @options[:target]
+      result &&= name =~ @options[:target]
+    end
+
+    result
   end
 
   def exec_by_format(proc_by_format)

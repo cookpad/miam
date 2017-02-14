@@ -27,6 +27,7 @@ It defines the state of IAM using DSL, and updates IAM according to DSL.
   * Fix `--target` option for Policies ([RP#21](https://github.com/winebarrel/miam/pull/21))
   * Fix for `Rate exceeded` ([PR#23](https://github.com/winebarrel/miam/pull/23))
   * Fix for non-User credentials  ([PR#17](https://github.com/winebarrel/miam/pull/17))
+  * Add `--exclude` option
 
 ## Installation
 
@@ -76,6 +77,7 @@ Usage: miam [options]
         --format=FORMAT
         --export-concurrency N
         --target REGEXP
+        --exclude REGEXP
         --ignore-login-profile
         --no-color
         --no-progress
