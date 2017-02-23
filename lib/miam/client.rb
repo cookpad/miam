@@ -266,6 +266,21 @@ class Miam::Client
     expected_assume_role_policy.sort_array!
     actual_assume_role_policy.sort_array!
 
+    # With only one entity granted
+    # On IAM
+    #   (1) Statement => [ { Principal => AWS => arn } ]
+    # Should be able to specify like:
+    #   (2) Statement => [ { Principal => AWS => [arn] } ]
+    # Actually (1) is reflected when config (2) is applied
+    if expected_assume_role_policy.key?('Statement')
+      expected_assume_role_policy['Statement'].each do |stmt|
+        next unless stmt.key?('Principal')
+        stmt['Principal'].each do |k, v|
+          stmt['Principal'][k] = v[0] if v.is_a?(Array) && v.length < 2
+        end
+      end
+    end
+
     if expected_assume_role_policy != actual_assume_role_policy
       @driver.update_assume_role_policy(role_name, expected_assume_role_policy, actual_assume_role_policy)
       updated = true
