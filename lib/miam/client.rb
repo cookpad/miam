@@ -272,12 +272,13 @@ class Miam::Client
     # Should be able to specify like:
     #   (2) Statement => [ { Principal => AWS => [arn] } ]
     # Actually (1) is reflected when config (2) is applied
-    if expected_assume_role_policy.key?('Statement')
-      expected_assume_role_policy['Statement'].each do |stmt|
-        next unless stmt.key?('Principal')
-        stmt['Principal'].each do |k, v|
-          stmt['Principal'][k] = v[0] if v.is_a?(Array) && v.length < 2
-        end
+    expected_arp_stmt = expected_assume_role_policy.fetch('Statement', [])
+    expected_arp_stmt = expected_arp_stmt.select {|i| i.key?('Principal') }
+
+    expected_arp_stmt.each do |stmt|
+      stmt['Principal'].each do |k, v|
+        entities = Array(v)
+        stmt['Principal'][k] = entities.first if entities.length < 2
       end
     end
 
