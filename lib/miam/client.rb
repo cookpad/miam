@@ -5,7 +5,8 @@ class Miam::Client
     @options = {:format => :ruby}.merge(options)
     aws_config = options.delete(:aws_config) || {}
     @iam = Aws::IAM::Client.new(aws_config)
-    @driver = Miam::Driver.new(@iam, options)
+    @sts = Aws::STS::Client.new(aws_config)
+    @driver = Miam::Driver.new(@iam, @sts, options)
     @password_manager = options[:password_manager] || Miam::PasswordManager.new('-', options)
   end
 
@@ -452,7 +453,7 @@ class Miam::Client
           log(:warn, "ManagedPolicy `#{policy_name}`: 'path' cannot be updated", :color => :yellow)
         end
 
-        updated = walk_managed_policy(policy_name, expected_attrs[:document], actual_attrs[:document]) || updated
+        updated = walk_managed_policy(policy_name, expected_attrs, actual_attrs) || updated
       else
         @driver.create_managed_policy(policy_name, expected_attrs)
         updated = true
@@ -462,13 +463,17 @@ class Miam::Client
     updated
   end
 
-  def walk_managed_policy(policy_name, expected_document, actual_document)
+  def walk_managed_policy(policy_name, expected_attrs, actual_attrs)
     updated = false
+    expected_document = expected_attrs[:document]
+    actual_document = actual_attrs[:document]
+    path = actual_attrs[:path]
+
     expected_document.sort_array!
     actual_document.sort_array!
 
     if expected_document != actual_document
-      @driver.update_managed_policy(policy_name, expected_document, actual_document)
+      @driver.update_managed_policy(policy_name, path, expected_document, actual_document)
       updated = true
     end
 
@@ -479,7 +484,8 @@ class Miam::Client
     updated = false
 
     actual.each do |policy_name, actual_attrs|
-      @driver.delete_managed_policy(policy_name)
+      path = actual_attrs[:path]
+      @driver.delete_managed_policy(policy_name, path)
       updated = true
     end
 

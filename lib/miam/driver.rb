@@ -4,8 +4,9 @@ class Miam::Driver
   MAX_POLICY_SIZE = 2048
   MAX_POLICY_VERSIONS = 5
 
-  def initialize(iam, options = {})
+  def initialize(iam, sts, options = {})
     @iam = iam
+    @sts = sts
     @options = options
   end
 
@@ -377,12 +378,12 @@ class Miam::Driver
     end
   end
 
-  def delete_managed_policy(policy_name)
+  def delete_managed_policy(policy_name, path)
     log(:info, "Delete ManagedPolicy `#{policy_name}`", :color => :red)
 
     unless_dry_run do
       policy_versions = @iam.list_policy_versions(
-        :policy_arn => policy_arn(policy_name),
+        :policy_arn => policy_arn(policy_name, path),
         :max_items => MAX_POLICY_VERSIONS
       )
 
@@ -390,24 +391,24 @@ class Miam::Driver
         pv.is_default_version
       }.each {|pv|
         @iam.delete_policy_version(
-          :policy_arn => policy_arn(policy_name),
+          :policy_arn => policy_arn(policy_name, path),
           :version_id => pv.version_id
         )
       }
 
       @iam.delete_policy(
-        :policy_arn => policy_arn(policy_name)
+        :policy_arn => policy_arn(policy_name, path)
       )
     end
   end
 
-  def update_managed_policy(policy_name, policy_document, old_policy_document)
+  def update_managed_policy(policy_name, path, policy_document, old_policy_document)
     log(:info, "Update ManagedPolicy `#{policy_name}`", :color => :green)
     log(:info, Miam::Utils.diff(old_policy_document, policy_document, :color => @options[:color]), :color => false)
 
     unless_dry_run do
       policy_versions = @iam.list_policy_versions(
-        :policy_arn => policy_arn(policy_name),
+        :policy_arn => policy_arn(policy_name, path),
         :max_items => MAX_POLICY_VERSIONS
       )
 
@@ -417,13 +418,13 @@ class Miam::Driver
         }.sort_by {|pv| pv.version_id[1..-1].to_i }.first
 
         @iam.delete_policy_version(
-          :policy_arn => policy_arn(policy_name),
+          :policy_arn => policy_arn(policy_name, path),
           :version_id => delete_policy_version.version_id
         )
       end
 
       @iam.create_policy_version(
-        :policy_arn => policy_arn(policy_name),
+        :policy_arn => policy_arn(policy_name, path),
         :policy_document => encode_document(policy_document),
         set_as_default: true
       )
@@ -455,11 +456,11 @@ class Miam::Driver
     yield unless @options[:dry_run]
   end
 
-  def user_id
-    @user_id ||= @iam.get_user.user.user_id
+  def account
+    @account ||= @sts.get_caller_identity.account
   end
 
-  def policy_arn(policy_name)
-    "arn:aws:iam::#{user_id}:policy/#{policy_name}"
+  def policy_arn(policy_name, path)
+    "arn:aws:iam::#{account}:#{File.join('policy', path, policy_name)}"
   end
 end
