@@ -138,7 +138,7 @@ class Miam::Client
       updated = true
     elsif expected_login_profile != actual_login_profile
       if @options[:ignore_login_profile]
-        log(:warn, "User `#{user_name}`: difference of loging profile has been ignored: expected=#{expected_login_profile.inspect}, actual=#{actual_login_profile.inspect}", :color => :yellow)
+        log(:warn, "User `#{user_name}`: difference of login profile has been ignored: expected=#{expected_login_profile.inspect}, actual=#{actual_login_profile.inspect}", :color => :yellow)
       else
         @driver.update_login_profile(user_name, expected_login_profile, actual_login_profile)
         updated = true
