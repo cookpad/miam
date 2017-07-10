@@ -5,7 +5,7 @@ Miam is a tool to manage IAM.
 It defines the state of IAM using DSL, and updates IAM according to DSL.
 
 [![Gem Version](https://badge.fury.io/rb/miam.svg)](http://badge.fury.io/rb/miam)
-[![Build Status](https://travis-ci.org/winebarrel/miam.svg?branch=master)](https://travis-ci.org/winebarrel/miam)
+[![Build Status](https://travis-ci.org/codenize-tools/miam.svg?branch=master)](https://travis-ci.org/codenize-tools/miam)
 [![Coverage Status](https://coveralls.io/repos/winebarrel/miam/badge.svg?branch=master&service=github)](https://coveralls.io/github/winebarrel/miam?branch=master)
 
 **Notice**
