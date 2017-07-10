@@ -8,8 +8,6 @@ Gem::Specification.new do |spec|
   spec.version       = Miam::VERSION
   spec.authors       = ['Genki Sugawara']
   spec.email         = ['sgwr_dts@yahoo.co.jp']
-  spec.summary       = %q{TODO: Write a short summary. Required.}
-  spec.description   = %q{TODO: Write a longer description. Optional.}
   spec.summary       = %q{Miam is a tool to manage IAM.}
   spec.description   = %q{Miam is a tool to manage IAM. It defines the state of IAM using DSL, and updates IAM according to DSL.}
   spec.homepage      = 'https://github.com/codenize-tools/miam'
@@ -31,4 +29,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rspec', '>= 3.0.0'
   spec.add_development_dependency 'rspec-instafail'
   spec.add_development_dependency 'coveralls'
+  spec.add_development_dependency 'nokogiri'
 end

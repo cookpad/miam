@@ -1,4 +1,5 @@
 --require rspec/instafail
---format RSpec::Instafail
+--format documentation
+#RSpec::Instafail
 --colour
 --require spec_helper

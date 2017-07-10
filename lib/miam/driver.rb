@@ -4,9 +4,11 @@ class Miam::Driver
   MAX_POLICY_SIZE = 2048
   MAX_POLICY_VERSIONS = 5
 
-  def initialize(iam, options = {})
+  def initialize(iam, sts, options = {})
     @iam = iam
+    @sts = sts
     @options = options
+    @account_id = nil
   end
 
   def create_user(user_name, attrs)
@@ -65,6 +67,14 @@ class Miam::Driver
 
       list_signing_certificate_ids(user_name).each do |certificate_id|
         @iam.delete_signing_certificate(:user_name => user_name, :certificate_id => certificate_id)
+      end
+
+      mfa_devices = @iam.list_mfa_devices(:user_name => user_name).map {|resp|
+        resp.mfa_devices
+      }.flatten
+
+      mfa_devices.each do |md|
+        @iam.deactivate_mfa_device(:user_name => user_name, :serial_number => md.serial_number)
       end
 
       @iam.delete_user(:user_name => user_name)
@@ -377,12 +387,12 @@ class Miam::Driver
     end
   end
 
-  def delete_managed_policy(policy_name)
+  def delete_managed_policy(policy_name, policy_path)
     log(:info, "Delete ManagedPolicy `#{policy_name}`", :color => :red)
 
     unless_dry_run do
       policy_versions = @iam.list_policy_versions(
-        :policy_arn => policy_arn(policy_name),
+        :policy_arn => policy_arn(policy_name, policy_path),
         :max_items => MAX_POLICY_VERSIONS
       )
 
@@ -390,24 +400,24 @@ class Miam::Driver
         pv.is_default_version
       }.each {|pv|
         @iam.delete_policy_version(
-          :policy_arn => policy_arn(policy_name),
+          :policy_arn => policy_arn(policy_name, policy_path),
           :version_id => pv.version_id
         )
       }
 
       @iam.delete_policy(
-        :policy_arn => policy_arn(policy_name)
+        :policy_arn => policy_arn(policy_name, policy_path)
       )
     end
   end
 
-  def update_managed_policy(policy_name, policy_document, old_policy_document)
+  def update_managed_policy(policy_name, policy_path, policy_document, old_policy_document)
     log(:info, "Update ManagedPolicy `#{policy_name}`", :color => :green)
     log(:info, Miam::Utils.diff(old_policy_document, policy_document, :color => @options[:color]), :color => false)
 
     unless_dry_run do
       policy_versions = @iam.list_policy_versions(
-        :policy_arn => policy_arn(policy_name),
+        :policy_arn => policy_arn(policy_name, policy_path),
         :max_items => MAX_POLICY_VERSIONS
       )
 
@@ -417,17 +427,25 @@ class Miam::Driver
         }.sort_by {|pv| pv.version_id[1..-1].to_i }.first
 
         @iam.delete_policy_version(
-          :policy_arn => policy_arn(policy_name),
+          :policy_arn => policy_arn(policy_name, policy_path),
           :version_id => delete_policy_version.version_id
         )
       end
 
       @iam.create_policy_version(
-        :policy_arn => policy_arn(policy_name),
+        :policy_arn => policy_arn(policy_name, policy_path),
         :policy_document => encode_document(policy_document),
         set_as_default: true
       )
     end
+  end
+
+  def password_policy
+    return @password_policy if instance_variable_defined?(:@password_policy)
+
+    @password_policy = @iam.get_account_password_policy.password_policy
+  rescue Aws::IAM::Errors::NoSuchEntity
+    @password_policy = nil
   end
 
   private
@@ -455,11 +473,13 @@ class Miam::Driver
     yield unless @options[:dry_run]
   end
 
-  def user_id
-    @user_id ||= @iam.get_user.user.user_id
+  def account_id
+    # https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+    # http://docs.aws.amazon.com/STS/latest/APIReference/API_GetCallerIdentity.html
+    @account_id ||= @sts.get_caller_identity.account
   end
 
-  def policy_arn(policy_name)
-    "arn:aws:iam::#{user_id}:policy/#{policy_name}"
+  def policy_arn(policy_name, policy_path)
+    File.join("arn:aws:iam::#{account_id}:policy", policy_path, policy_name)
   end
 end

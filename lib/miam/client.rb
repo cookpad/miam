@@ -5,7 +5,8 @@ class Miam::Client
     @options = {:format => :ruby}.merge(options)
     aws_config = options.delete(:aws_config) || {}
     @iam = Aws::IAM::Client.new(aws_config)
-    @driver = Miam::Driver.new(@iam, options)
+    @sts = Aws::STS::Client.new(aws_config)
+    @driver = Miam::Driver.new(@iam, @sts, options)
     @password_manager = options[:password_manager] || Miam::PasswordManager.new('-', options)
   end
 
@@ -129,7 +130,7 @@ class Miam::Client
     end
 
     if expected_login_profile and not actual_login_profile
-      expected_login_profile[:password] ||= @password_manager.identify(user_name, :login_profile)
+      expected_login_profile[:password] ||= @password_manager.identify(user_name, :login_profile, @driver.password_policy)
       @driver.create_login_profile(user_name, expected_login_profile)
       updated = true
     elsif not expected_login_profile and actual_login_profile
@@ -137,7 +138,7 @@ class Miam::Client
       updated = true
     elsif expected_login_profile != actual_login_profile
       if @options[:ignore_login_profile]
-        log(:warn, "User `#{user_name}`: difference of loging profile has been ignored: expected=#{expected_login_profile.inspect}, actual=#{actual_login_profile.inspect}", :color => :yellow)
+        log(:warn, "User `#{user_name}`: difference of login profile has been ignored: expected=#{expected_login_profile.inspect}, actual=#{actual_login_profile.inspect}", :color => :yellow)
       else
         @driver.update_login_profile(user_name, expected_login_profile, actual_login_profile)
         updated = true
@@ -264,6 +265,22 @@ class Miam::Client
     updated = false
     expected_assume_role_policy.sort_array!
     actual_assume_role_policy.sort_array!
+
+    # With only one entity granted
+    # On IAM
+    #   (1) Statement => [ { Principal => AWS => arn } ]
+    # Should be able to specify like:
+    #   (2) Statement => [ { Principal => AWS => [arn] } ]
+    # Actually (1) is reflected when config (2) is applied
+    expected_arp_stmt = expected_assume_role_policy.fetch('Statement', [])
+    expected_arp_stmt = expected_arp_stmt.select {|i| i.key?('Principal') }
+
+    expected_arp_stmt.each do |stmt|
+      stmt['Principal'].each do |k, v|
+        entities = Array(v)
+        stmt['Principal'][k] = entities.first if entities.length < 2
+      end
+    end
 
     if expected_assume_role_policy != actual_assume_role_policy
       @driver.update_assume_role_policy(role_name, expected_assume_role_policy, actual_assume_role_policy)
@@ -445,6 +462,7 @@ class Miam::Client
     updated = false
 
     expected.each do |policy_name, expected_attrs|
+      next unless target_matched?(policy_name)
       actual_attrs = actual.delete(policy_name)
 
       if actual_attrs
@@ -452,7 +470,7 @@ class Miam::Client
           log(:warn, "ManagedPolicy `#{policy_name}`: 'path' cannot be updated", :color => :yellow)
         end
 
-        updated = walk_managed_policy(policy_name, expected_attrs[:document], actual_attrs[:document]) || updated
+        updated = walk_managed_policy(policy_name, actual_attrs[:path], expected_attrs[:document], actual_attrs[:document]) || updated
       else
         @driver.create_managed_policy(policy_name, expected_attrs)
         updated = true
@@ -462,13 +480,13 @@ class Miam::Client
     updated
   end
 
-  def walk_managed_policy(policy_name, expected_document, actual_document)
+  def walk_managed_policy(policy_name, policy_path, expected_document, actual_document)
     updated = false
     expected_document.sort_array!
     actual_document.sort_array!
 
     if expected_document != actual_document
-      @driver.update_managed_policy(policy_name, expected_document, actual_document)
+      @driver.update_managed_policy(policy_name, policy_path, expected_document, actual_document)
       updated = true
     end
 
@@ -479,7 +497,8 @@ class Miam::Client
     updated = false
 
     actual.each do |policy_name, actual_attrs|
-      @driver.delete_managed_policy(policy_name)
+      next unless target_matched?(policy_name)
+      @driver.delete_managed_policy(policy_name, actual_attrs[:path])
       updated = true
     end
 
@@ -505,11 +524,17 @@ class Miam::Client
   end
 
   def target_matched?(name)
-    if @options[:target]
-      name =~ @options[:target]
-    else
-      true
+    result = true
+
+    if @options[:exclude]
+      result &&= name !~ @options[:exclude]
     end
+
+    if @options[:target]
+      result &&= name =~ @options[:target]
+    end
+
+    result
   end
 
   def exec_by_format(proc_by_format)

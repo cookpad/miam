@@ -1,6 +1,7 @@
 # coding: utf-8
 class Miam::Exporter
   AWS_MANAGED_POLICY_PREFIX = 'arn:aws:iam::aws:'
+  AWS_CN_MANAGED_POLICY_PREFIX = 'arn:aws-cn:iam::aws:'
 
   def self.export(iam, options = {})
     self.new(iam, options).export
@@ -200,7 +201,7 @@ class Miam::Exporter
     result = {}
 
     Parallel.each(policies, :in_threads => @concurrency) do |policy|
-      if policy.arn.start_with?(AWS_MANAGED_POLICY_PREFIX)
+      if policy.arn.start_with?(AWS_MANAGED_POLICY_PREFIX) or policy.arn.start_with?(AWS_CN_MANAGED_POLICY_PREFIX)
         next
       end
 
@@ -262,10 +263,10 @@ class Miam::Exporter
     @iam.get_account_authorization_details.each do |resp|
       keys.each do |key|
         account_authorization_details[key].concat(resp[key])
+      end
 
-        unless @options[:no_progress]
-          progressbar.increment
-        end
+      unless @options[:no_progress]
+        progressbar.increment
       end
     end
 
