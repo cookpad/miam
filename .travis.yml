@@ -1,12 +1,12 @@
 sudo: false
 language: ruby
 rvm:
-- 2.0.0
+- 2.3.4
 script:
 - bundle install
 - bundle exec rake
 env:
   global:
-  - secure: "Ec8bwSfp06anSzLJpGhkKjPz9EocMwl7H8t2LKoI3bKV/cz9JU0GhhUdUUmg3mCFH9+8/YGLzcbFKcxZIqnDK7ukdgTGsnGDevnctis0QwM7/nKHdkaK8JWhCx41TUXOqoiCKkNEnm1EbDtrILt4rJwb0BGXGnPjv6nLAyvdE2Y="
-  - secure: "Ky5Dpxc7SIqbQ4Y10m/jik/rVdeGMeh1439m3KB+tiV/Bz1hhWv4+If150ajLjbmWCZBPMLhxrTL0EePoyqYXpOGHvINvYM+/XCPcpP4iYkaTzr1MVIOMpa8A8aAOOgQWoGOwfyWoxfrYzv/TRvtMietnm+dZwVcbbkQ4ut7oa4="
+  - secure: c5kyaYSGrKMg3bsVMCnIYe2w/3jJ4rxkoIwM06YGLmw5lPW0twWgpwpuBsGf6WKvDLv0eQjGq3B0I1DqHmdYHq4dQ+PdsvWg0kQUpzWpKD2ccVXevyPeDs5pC1UcLtDUpRk0Rv1Hpo4v5kiT2zsmLx29Z6F4n7agtzqK5Q2vdPs=
+  - secure: ipdvAzZ5EwTQui8CyINqRYLFNNe4ZyZP617xEmUS3YalhRMOEZ+NSq7BlqliE4IJPg8YlQjT5q35xFtREIr/KYS1tmU1/nFA68GC/9T+uJAsc3LSmUoYMn8Ot3654u1SjlZ86benyToZ2MgHglmHigS46SOoxBpqHrKMUW9RUz0=
   - AWS_REGION=ap-northeast-1
