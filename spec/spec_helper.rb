@@ -75,6 +75,8 @@ def apply(cli = client)
       retry
     end
   end
+
+  sleep ENV['APPLY_WAIT'].to_i
 end
 
 def export(options = {})
