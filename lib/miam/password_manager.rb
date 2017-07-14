@@ -13,7 +13,7 @@ class Miam::PasswordManager
 
   def identify(user, type, policy)
     password = mkpasswd(policy)
-    log(:info, "mkpasswd: #{password}")
+    log(:debug, "mkpasswd: #{password}")
     puts_password(user, type, password)
     password
   end
