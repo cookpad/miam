@@ -196,11 +196,11 @@ end
     result = true
 
     if @options[:exclude]
-      result &&= name !~ @options[:exclude]
+      result &&= @options[:exclude].all? {|r| name !~ r}
     end
 
     if @options[:target]
-      result &&= name =~ @options[:target]
+      result &&= @options[:target].any? {|r| name =~ r}
     end
 
     result
