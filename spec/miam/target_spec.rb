@@ -1,7 +1,7 @@
 describe 'target option' do
   let(:dsl) do
     <<-RUBY
-      user "bob", :path=>"/devloper/" do
+      user "bob", :path=>"/developer/" do
         login_profile :password_reset_required=>true
 
         groups(
@@ -98,7 +98,7 @@ describe 'target option' do
   context 'when target a user' do
     let(:target_bob) do
       <<-RUBY
-      user "bob", :path=>"/devloper/" do
+      user "bob", :path=>"/developer/" do
         login_profile :password_reset_required=>true
 
         groups(

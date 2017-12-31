@@ -1,7 +1,7 @@
 describe 'target/exclude options' do
   let(:dsl) do
     <<-RUBY
-      user "bob", :path=>"/devloper/" do
+      user "bob", :path=>"/developer/" do
         login_profile :password_reset_required=>true
 
         groups(
@@ -177,7 +177,7 @@ describe 'target/exclude options' do
   context 'when exclude a group, a role and an instance profile' do
     let(:exclude_admin_and_my) do
       <<-RUBY
-      user "bob", :path=>"/devloper/" do
+      user "bob", :path=>"/developer/" do
         login_profile :password_reset_required=>true
 
         groups(
