@@ -1,4 +1,4 @@
-describe 'target/exclude options' do
+describe 'exclude option' do
   let(:dsl) do
     <<-RUBY
       user "bob", :path=>"/developer/" do
