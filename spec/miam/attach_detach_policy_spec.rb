@@ -1,7 +1,7 @@
 describe 'attach/detach policy' do
   let(:dsl) do
     <<-RUBY
-      user "bob", :path=>"/devloper/" do
+      user "bob", :path=>"/developer/" do
         login_profile :password_reset_required=>true
 
         groups(
@@ -94,7 +94,7 @@ describe 'attach/detach policy' do
   let(:expected) do
     {:users=>
       {"bob"=>
-        {:path=>"/devloper/",
+        {:path=>"/developer/",
          :groups=>["Admin", "SES"],
          :attached_managed_policies=>[
           "arn:aws:iam::aws:policy/AmazonElastiCacheReadOnlyAccess"],
@@ -174,7 +174,7 @@ describe 'attach/detach policy' do
   context 'when attach policy' do
     let(:update_policy_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(
@@ -282,7 +282,7 @@ describe 'attach/detach policy' do
   context 'when detach policy' do
     let(:update_policy_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(

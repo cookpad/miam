@@ -1,7 +1,7 @@
 describe 'update' do
   let(:dsl) do
     <<-RUBY
-      user "bob", :path=>"/devloper/" do
+      user "bob", :path=>"/developer/" do
         login_profile :password_reset_required=>true
 
         groups(
@@ -74,7 +74,7 @@ describe 'update' do
   let(:expected) do
     {:users=>
       {"bob"=>
-        {:path=>"/devloper/",
+        {:path=>"/developer/",
          :groups=>["Admin", "SES"],
          :attached_managed_policies=>[],
          :policies=>
@@ -149,7 +149,7 @@ describe 'update' do
   context 'when update policy' do
     let(:update_policy_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(
@@ -236,7 +236,7 @@ describe 'update' do
   context 'when update path' do
     let(:update_path_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(
@@ -320,7 +320,7 @@ describe 'update' do
   context 'when update path (role, instance_profile)' do
     let(:cannot_update_path_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(
@@ -409,7 +409,7 @@ describe 'update' do
   context 'when update assume_role_policy' do
     let(:update_assume_role_policy_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(
@@ -492,7 +492,7 @@ describe 'update' do
   context 'when update groups' do
     let(:update_groups_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(
@@ -580,7 +580,7 @@ describe 'update' do
   context 'when update login_profile' do
     let(:update_login_profile_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>false
 
           groups(
@@ -663,7 +663,7 @@ describe 'update' do
   context 'when delete login_profile' do
     let(:delete_login_profile_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           groups(
             "Admin",
             "SES"
@@ -744,7 +744,7 @@ describe 'update' do
   context 'when delete policy' do
     let(:delete_policy_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(
@@ -807,7 +807,7 @@ describe 'update' do
   context 'when update instance_profiles' do
     let(:update_instance_profiles_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(

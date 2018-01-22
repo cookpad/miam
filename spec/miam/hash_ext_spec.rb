@@ -2,7 +2,7 @@ describe 'Hash#sort_array!' do
   let(:hash) do
     {:users=>
       {"bob"=>
-        {:path=>"/devloper/",
+        {:path=>"/developer/",
          :groups=>[],
          :policies=>
           {"S3"=>
@@ -19,7 +19,7 @@ describe 'Hash#sort_array!' do
   let(:expected_hash) do
     {:users=>
       {"bob"=>
-        {:path=>"/devloper/",
+        {:path=>"/developer/",
          :groups=>[],
          :policies=>
           {"S3"=>

@@ -1,7 +1,7 @@
 describe 'ignore login profile' do
   let(:dsl) do
     <<-RUBY
-      user "bob", :path=>"/devloper/" do
+      user "bob", :path=>"/developer/" do
         login_profile :password_reset_required=>true
 
         policy "S3" do
@@ -18,7 +18,7 @@ describe 'ignore login profile' do
 
   let(:update_dsl) do
     <<-RUBY
-      user "bob", :path=>"/devloper/" do
+      user "bob", :path=>"/developer/" do
         login_profile :password_reset_required=>false
 
         policy "S3" do
@@ -37,7 +37,7 @@ describe 'ignore login profile' do
   let(:expected) do
     {:users=>
       {"bob"=>
-        {:path=>"/devloper/",
+        {:path=>"/developer/",
          :groups=>[],
          :policies=>
           {"S3"=>
