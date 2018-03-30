@@ -122,6 +122,7 @@ describe 'update' do
               "Principal"=>{"Service"=>"ec2.amazonaws.com"},
               "Action"=>"sts:AssumeRole"}]},
          :instance_profiles=>["my-instance-profile"],
+         :max_session_duration=>3600,
          :attached_managed_policies=>[],
          :policies=>
           {"role-policy"=>
@@ -885,6 +886,91 @@ describe 'update' do
       expect(updated).to be_truthy
       expected[:roles]["my-role"][:instance_profiles] = ["my-instance-profile2"]
       expected[:instance_profiles]["my-instance-profile2"] = {:path=>"/profile2/"}
+      expect(export).to eq expected
+    end
+  end
+
+  context 'when update role max_session_duration' do
+    let(:update_instance_profiles_dsl) do
+      <<-RUBY
+        user "bob", :path=>"/developer/" do
+          login_profile :password_reset_required=>true
+
+          groups(
+            "Admin",
+            "SES"
+          )
+
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        user "mary", :path=>"/staff/" do
+          policy "S3" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        group "Admin", :path=>"/admin/" do
+          policy "Admin" do
+            {"Statement"=>[{"Effect"=>"Allow", "Action"=>"*", "Resource"=>"*"}]}
+          end
+        end
+
+        group "SES", :path=>"/ses/" do
+          policy "ses-policy" do
+            {"Statement"=>
+              [{"Effect"=>"Allow", "Action"=>"ses:SendRawEmail", "Resource"=>"*"}]}
+          end
+        end
+
+        role "my-role", :path=>"/any/" do
+          instance_profiles(
+            "my-instance-profile"
+          )
+
+          max_session_policy 43200
+
+          assume_role_policy_document do
+            {"Version"=>"2012-10-17",
+             "Statement"=>
+              [{"Sid"=>"",
+                "Effect"=>"Allow",
+                "Principal"=>{"Service"=>"ec2.amazonaws.com"},
+                "Action"=>"sts:AssumeRole"}]}
+          end
+
+          policy "role-policy" do
+            {"Statement"=>
+              [{"Action"=>
+                 ["s3:Get*",
+                  "s3:List*"],
+                "Effect"=>"Allow",
+                "Resource"=>"*"}]}
+          end
+        end
+
+        instance_profile "my-instance-profile", :path=>"/profile/"
+      RUBY
+    end
+
+    subject { client }
+
+    it do
+      updated = apply(subject) { update_instance_profiles_dsl }
+      expect(updated).to be_truthy
+      expected[:roles]["my-role"][:max_session_duration] = 43200
       expect(export).to eq expected
     end
   end
