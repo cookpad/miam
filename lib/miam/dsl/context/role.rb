@@ -4,7 +4,7 @@ class Miam::DSL::Context::Role
   def initialize(context, name, &block)
     @role_name = name
     @context = context.merge(:role_name => name)
-    @result = {:instance_profiles => [], :policies => {}, :attached_managed_policies => []}
+    @result = {:instance_profiles => [], :max_session_duration => 3600, :policies => {}, :attached_managed_policies => []}
     instance_eval(&block)
   end
 
@@ -20,6 +20,10 @@ class Miam::DSL::Context::Role
 
   def instance_profiles(*profiles)
     @result[:instance_profiles].concat(profiles.map(&:to_s))
+  end
+
+  def max_session_duration(duration)
+    @result[:max_session_duration] = duration
   end
 
   def assume_role_policy_document

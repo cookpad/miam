@@ -95,6 +95,8 @@ end
 role #{role_name.inspect}, #{Miam::Utils.unbrace(role_options.inspect)} do
   #{output_role_instance_profiles(attrs[:instance_profiles])}
 
+  #{output_role_max_session_duration(attrs[:max_session_duration])}
+
   #{output_assume_role_policy_document(attrs[:assume_role_policy_document])}
 
   #{output_policies(attrs[:policies])}
@@ -120,6 +122,12 @@ end
       next unless target_matched?(instance_profile_name)
       output_instance_profile(instance_profile_name, attrs)
     }.select {|i| i }.join("\n")
+  end
+
+  def output_role_max_session_duration(max_session_duration)
+    <<-EOS.strip
+      max_session_duration #{max_session_duration}
+    EOS
   end
 
   def output_assume_role_policy_document(assume_role_policy_document)
