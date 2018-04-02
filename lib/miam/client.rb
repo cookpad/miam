@@ -255,10 +255,22 @@ class Miam::Client
       log(:warn, "Role `#{role_name}`: 'path' cannot be updated", :color => :yellow)
     end
 
-    updated = walk_assume_role_policy(role_name, expected_attrs[:assume_role_policy_document], actual_attrs[:assume_role_policy_document])
+    updated = walk_role_settings(role_name, {max_session_duration: expected_attrs[:max_session_duration]}, {max_session_duration: actual_attrs[:max_session_duration]})
+    updated = walk_assume_role_policy(role_name, expected_attrs[:assume_role_policy_document], actual_attrs[:assume_role_policy_document]) || updated
     updated = walk_role_instance_profiles(role_name, expected_attrs[:instance_profiles], actual_attrs[:instance_profiles]) || updated
     updated = walk_attached_managed_policies(:role, role_name, expected_attrs[:attached_managed_policies], actual_attrs[:attached_managed_policies]) || updated
     walk_policies(:role, role_name, expected_attrs[:policies], actual_attrs[:policies]) || updated
+  end
+
+  def walk_role_settings(role_name, expected_settings, actual_settings)
+    updated = false
+
+    if expected_settings != actual_settings
+      @driver.update_role_settings(role_name, expected_settings, actual_settings)
+      updated = true
+    end
+
+    updated
   end
 
   def walk_assume_role_policy(role_name, expected_assume_role_policy, actual_assume_role_policy)

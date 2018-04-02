@@ -178,6 +178,7 @@ class Miam::Driver
       params = {
         :role_name => role_name,
         :assume_role_policy_document => encode_document(assume_role_policy_document),
+        :max_session_duration => attrs.fetch(:max_session_duration)
       }
 
       params[:path] = attrs[:path] if attrs[:path]
@@ -189,6 +190,7 @@ class Miam::Driver
       :assume_role_policy_document => assume_role_policy_document,
       :policies => {},
       :attached_managed_policies => [],
+      :max_session_duration => attrs.fetch(:max_session_duration),
     }
 
     new_role_attrs[:path] = attrs[:path] if attrs[:path]
@@ -234,6 +236,14 @@ class Miam::Driver
       instance_profile_names.each do |instance_profile_name|
         @iam.remove_role_from_instance_profile(:instance_profile_name => instance_profile_name, :role_name => role_name)
       end
+    end
+  end
+
+  def update_role_settings(role_name, new_settings, old_settings)
+    log(:info, "Update Role `#{role_name}` > Settings", :color => :green)
+    log(:info, Miam::Utils.diff(old_settings, new_settings, :color => @options[:color]), :color => false)
+    unless_dry_run do
+      @iam.update_role(new_settings.merge(role_name: role_name))
     end
   end
 
