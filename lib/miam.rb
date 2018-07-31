@@ -5,7 +5,7 @@ require 'pp'
 require 'singleton'
 require 'thread'
 
-require 'aws-sdk-core'
+require 'aws-sdk-iam'
 Aws.use_bundled_cert!
 
 require 'ruby-progressbar'
