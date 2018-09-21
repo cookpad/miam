@@ -2,7 +2,10 @@ class Miam::Client
   include Miam::Logger::Helper
 
   def initialize(options = {})
-    @options = {:format => :ruby}.merge(options)
+    @options = {
+      format: :ruby,
+      exclude: []
+    }.merge(options)
     aws_config = options.delete(:aws_config) || {}
     @iam = Aws::IAM::Client.new(aws_config)
     @sts = Aws::STS::Client.new(aws_config)
@@ -58,6 +61,7 @@ class Miam::Client
 
   def walk(file)
     expected = load_file(file)
+    @options[:exclude] += expected[:exclude]
 
     actual, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options)
     updated = pre_walk_managed_policies(expected[:policies], actual[:policies])
@@ -539,7 +543,7 @@ class Miam::Client
     result = true
 
     if @options[:exclude]
-      result &&= @options[:exclude].all? {|r| name !~ r}
+      result &&= @options[:exclude].all? {|r| name !~ r }
     end
 
     if @options[:target]

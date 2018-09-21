@@ -12,7 +12,7 @@ class Miam::DSL::Context
   def initialize(path, options = {}, &block)
     @path = path
     @options = options
-    @result = {:users => {}, :groups => {}, :roles => {}, :instance_profiles => {}, :policies => {}}
+    @result = {:users => {}, :groups => {}, :roles => {}, :instance_profiles => {}, :policies => {}, :exclude => []}
 
     @context = Hashie::Mash.new(
       :path => path,
@@ -39,6 +39,10 @@ class Miam::DSL::Context
     else
       Kernel.require(file)
     end
+  end
+
+  def exclude(pattern)
+    @result[:exclude] << pattern
   end
 
   def user(name, user_options = {}, &block)
