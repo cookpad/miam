@@ -234,4 +234,19 @@ describe 'exclude option' do
       expect(updated).to be_falsey
     end
   end
+
+  context 'when specifying exclude option in a DSL' do
+    let(:exclude_everything) do
+      <<-RUBY
+      exclude /.*/
+      RUBY
+    end
+
+    subject { client(exclude: []) }
+
+    it do
+      updated = apply(subject) { exclude_everything }
+      expect(updated).to be_falsey
+    end
+  end
 end
