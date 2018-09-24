@@ -91,7 +91,7 @@ class Miam::Client
         updated = walk_user(user_name, expected_attrs, actual_attrs) || updated
       else
         actual_attrs = @driver.create_user(user_name, expected_attrs)
-        access_key = @driver.create_access_key(user_name)
+        access_key = @driver.create_access_key(user_name) unless @options[:no_access_key]
 
         if access_key
           @password_manager.puts_password(user_name, access_key[:access_key_id], access_key[:secret_access_key])
