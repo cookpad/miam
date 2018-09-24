@@ -54,6 +54,7 @@ ARGV.options do |opt|
     opt.on(''  , '--target REGEXP')                 {|v| (options[:target] ||= [])     << Regexp.new(v)                         }
     opt.on(''  , '--exclude REGEXP')                {|v| (options[:exclude] ||= [])    << Regexp.new(v)                         }
     opt.on(''  , '--ignore-login-profile')          {    options[:ignore_login_profile] = true                                  }
+    opt.on(''  , '--no-access-key')                 {    options[:no_access_key] = true                                         }
     opt.on(''  , '--no-color')                      {    options[:color]                = false                                 }
     opt.on(''  , '--no-progress')                   {    options[:no_progress]          = true                                  }
     opt.on(''  , '--debug')                         {    options[:debug]                = true                                  }
