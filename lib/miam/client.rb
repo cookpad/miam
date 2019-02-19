@@ -2,7 +2,10 @@ class Miam::Client
   include Miam::Logger::Helper
 
   def initialize(options = {})
-    @options = {:format => :ruby}.merge(options)
+    @options = {
+      format: :ruby,
+      exclude: []
+    }.merge(options)
     aws_config = options.delete(:aws_config) || {}
     @iam = Aws::IAM::Client.new(aws_config)
     @sts = Aws::STS::Client.new(aws_config)
@@ -58,6 +61,7 @@ class Miam::Client
 
   def walk(file)
     expected = load_file(file)
+    @options[:exclude] += expected[:exclude]
 
     actual, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options)
     updated = pre_walk_managed_policies(expected[:policies], actual[:policies])
@@ -87,7 +91,7 @@ class Miam::Client
         updated = walk_user(user_name, expected_attrs, actual_attrs) || updated
       else
         actual_attrs = @driver.create_user(user_name, expected_attrs)
-        access_key = @driver.create_access_key(user_name)
+        access_key = @driver.create_access_key(user_name) unless @options[:no_access_key]
 
         if access_key
           @password_manager.puts_password(user_name, access_key[:access_key_id], access_key[:secret_access_key])
@@ -255,10 +259,22 @@ class Miam::Client
       log(:warn, "Role `#{role_name}`: 'path' cannot be updated", :color => :yellow)
     end
 
-    updated = walk_assume_role_policy(role_name, expected_attrs[:assume_role_policy_document], actual_attrs[:assume_role_policy_document])
+    updated = walk_role_settings(role_name, {max_session_duration: expected_attrs[:max_session_duration]}, {max_session_duration: actual_attrs[:max_session_duration]})
+    updated = walk_assume_role_policy(role_name, expected_attrs[:assume_role_policy_document], actual_attrs[:assume_role_policy_document]) || updated
     updated = walk_role_instance_profiles(role_name, expected_attrs[:instance_profiles], actual_attrs[:instance_profiles]) || updated
     updated = walk_attached_managed_policies(:role, role_name, expected_attrs[:attached_managed_policies], actual_attrs[:attached_managed_policies]) || updated
     walk_policies(:role, role_name, expected_attrs[:policies], actual_attrs[:policies]) || updated
+  end
+
+  def walk_role_settings(role_name, expected_settings, actual_settings)
+    updated = false
+
+    if expected_settings != actual_settings
+      @driver.update_role_settings(role_name, expected_settings, actual_settings)
+      updated = true
+    end
+
+    updated
   end
 
   def walk_assume_role_policy(role_name, expected_assume_role_policy, actual_assume_role_policy)
@@ -527,11 +543,11 @@ class Miam::Client
     result = true
 
     if @options[:exclude]
-      result &&= name !~ @options[:exclude]
+      result &&= @options[:exclude].all? {|r| name !~ r }
     end
 
     if @options[:target]
-      result &&= name =~ @options[:target]
+      result &&= @options[:target].any? {|r| name =~ r}
     end
 
     result

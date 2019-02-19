@@ -1,7 +1,7 @@
 describe 'update' do
   let(:dsl) do
     <<-RUBY
-      user "bob", :path=>"/devloper/" do
+      user "bob", :path=>"/developer/" do
         login_profile :password_reset_required=>true
 
         groups(
@@ -74,7 +74,7 @@ describe 'update' do
   let(:expected) do
     {:users=>
       {"bob"=>
-        {:path=>"/devloper/",
+        {:path=>"/developer/",
          :groups=>["Admin", "SES"],
          :attached_managed_policies=>[],
          :policies=>
@@ -139,7 +139,7 @@ describe 'update' do
   context 'when rename user' do
     let(:rename_user_dsl) do
       <<-RUBY
-        user "bob2", :path=>"/devloper/", :renamed_from=>"bob" do
+        user "bob2", :path=>"/developer/", :renamed_from=>"bob" do
           login_profile :password_reset_required=>true
 
           groups(
@@ -222,7 +222,7 @@ describe 'update' do
   context 'when rename group' do
     let(:rename_group_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(
@@ -306,7 +306,7 @@ describe 'update' do
   context 'when rename without renamed_from' do
     let(:rename_without_renamed_from_dsl) do
       <<-RUBY
-        user "bob2", :path=>"/devloper/" do
+        user "bob2", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(
@@ -391,7 +391,7 @@ describe 'update' do
   context 'when rename role and instance_profile' do
     let(:rename_role_and_instance_profile_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(

@@ -12,7 +12,7 @@ describe 'create' do
   context 'when create user and group' do
     let(:dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(
@@ -88,7 +88,7 @@ describe 'create' do
       let(:expected) do
         {:users=>
           {"bob"=>
-            {:path=>"/devloper/",
+            {:path=>"/developer/",
              :groups=>["Admin", "SES"],
              :attached_managed_policies=>[],
              :policies=>
@@ -184,7 +184,7 @@ describe 'create' do
               end
             end
 
-            user "bob", :path=>"/devloper/" do
+            user "bob", :path=>"/developer/" do
               include_template context.user_name
             end
 

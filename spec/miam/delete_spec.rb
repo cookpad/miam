@@ -1,7 +1,7 @@
 describe 'delete' do
   let(:dsl) do
     <<-RUBY
-      user "bob", :path=>"/devloper/" do
+      user "bob", :path=>"/developer/" do
         login_profile :password_reset_required=>true
 
         groups(
@@ -74,7 +74,7 @@ describe 'delete' do
   let(:expected) do
     {:users=>
       {"bob"=>
-        {:path=>"/devloper/",
+        {:path=>"/developer/",
          :groups=>["Admin", "SES"],
          :attached_managed_policies=>[],
          :policies=>
@@ -139,7 +139,7 @@ describe 'delete' do
   context 'when delete group' do
     let(:delete_group_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(
@@ -351,7 +351,7 @@ describe 'delete' do
   context 'when delete instance_profile' do
     let(:delete_instance_profiles_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(
@@ -432,7 +432,7 @@ describe 'delete' do
   context 'when delete role' do
     let(:delete_role_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(
@@ -491,7 +491,7 @@ describe 'delete' do
   context 'when delete role and instance_profile' do
     let(:delete_role_and_instance_profile_dsl) do
       <<-RUBY
-        user "bob", :path=>"/devloper/" do
+        user "bob", :path=>"/developer/" do
           login_profile :password_reset_required=>true
 
           groups(

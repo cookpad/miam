@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'aws-sdk-core', '>= 2.0.42'
+  spec.add_dependency 'aws-sdk-iam', '~> 1'
   spec.add_dependency 'ruby-progressbar'
   spec.add_dependency 'parallel'
   spec.add_dependency 'term-ansicolor'

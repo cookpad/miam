@@ -67,14 +67,17 @@ def tempfile(content, options = {})
 end
 
 def apply(cli = client)
-  tempfile(yield) do |f|
+  result = tempfile(yield) do |f|
     begin
       cli.apply(f.path)
-    rescue Aws::IAM::Errors::EntityTemporarilyUnmodifiable
+    rescue Aws::IAM::Errors::EntityTemporarilyUnmodifiable, Aws::IAM::Errors::Throttling, Aws::IAM::Errors::NoSuchEntity
       sleep 3
       retry
     end
   end
+
+  sleep ENV['APPLY_WAIT'].to_i
+  result
 end
 
 def export(options = {})

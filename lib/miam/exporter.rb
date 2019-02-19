@@ -144,6 +144,8 @@ class Miam::Exporter
       instance_profiles = role.instance_profile_list.map {|i| i.instance_profile_name }
       policies = export_role_policies(role)
       attached_managed_policies = role.attached_managed_policies.map(&:policy_arn)
+      role_data = @iam.get_role(role_name: role_name).role
+      max_session_duration = role_data.max_session_duration
 
       @mutex.synchronize do
         instance_profiles.each do |instance_profile_name|
@@ -159,6 +161,7 @@ class Miam::Exporter
           :instance_profiles => instance_profiles,
           :policies => policies,
           :attached_managed_policies => attached_managed_policies,
+          :max_session_duration => max_session_duration,
         }
 
         progress
