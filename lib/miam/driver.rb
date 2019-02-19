@@ -358,7 +358,7 @@ class Miam::Driver
     type_s = type.slice(0, 1).upcase + type.slice(1..-1)
 
     log(:info, "Update #{type_s} `#{name}`", :color => :green)
-    log(:info, "  detach policies=#{policies.join(',')}", :color => :green)
+    log(:info, "  detach policies=#{policies.join(',')}", :color => :red)
 
     unless_dry_run do
       policies.each do |arn|
