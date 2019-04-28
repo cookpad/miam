@@ -78,6 +78,7 @@ Usage: miam [options]
         --export-concurrency N
         --target REGEXP
         --exclude REGEXP
+        --exclude-path PATH
         --ignore-login-profile
         --no-color
         --no-progress
