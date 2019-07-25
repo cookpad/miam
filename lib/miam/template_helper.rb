@@ -20,7 +20,7 @@ module Miam
     end
 
     def required(*args)
-      missing_args = args - @context.keys
+      missing_args = args.map(&:to_s) - @context.keys
       unless missing_args.empty?
         ex = ArgumentError.new("Missing arguments: #{missing_args.join(", ")} in '#{@template_name}'")
         ex.set_backtrace(@caller)
