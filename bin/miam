@@ -19,10 +19,11 @@ MAGIC_COMMENT = <<-EOS
 EOS
 
 options = {
-  :dry_run => false,
-  :format  => :ruby,
-  :color   => true,
-  :debug   => false,
+  :dry_run        => false,
+  :format         => :ruby,
+  :color          => true,
+  :debug          => false,
+  :show_backtrace => false
 }
 
 options[:password_manager] = Miam::PasswordManager.new(account_output, options)
@@ -58,6 +59,7 @@ ARGV.options do |opt|
     opt.on(''  , '--no-color')                      {    options[:color]                = false                                 }
     opt.on(''  , '--no-progress')                   {    options[:no_progress]          = true                                  }
     opt.on(''  , '--debug')                         {    options[:debug]                = true                                  }
+    opt.on(''  , '--show-backtrace')                {    options[:show_backtrace]       = true                                  }
     opt.parse!
 
     aws_opts = {}
@@ -186,6 +188,7 @@ rescue => e
     raise e
   else
     $stderr.puts("[ERROR] #{e.message}".red)
+    $stderr.puts(e.backtrace.map(&:yellow)) if options[:show_backtrace]
     exit 1
   end
 end
