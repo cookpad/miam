@@ -12,8 +12,8 @@ require 'tempfile'
 require 'miam'
 
 Aws.config.update(
-  access_key_id: ENV['MIAM_TEST_ACCESS_KEY_ID'] || 'scott',
-  secret_access_key: ENV['MIAM_TEST_SECRET_ACCESS_KEY'] || 'tiger'
+  access_key_id: ENV['AWS_ACCESS_KEY_ID'] || 'scott',
+  secret_access_key: ENV['AWS_SECRET_ACCESS_KEY'] || 'tiger'
 )
 
 MIAM_TEST_ACCOUNT_ID = Aws::STS::Client.new.get_caller_identity.account
