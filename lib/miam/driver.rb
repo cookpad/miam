@@ -114,6 +114,22 @@ class Miam::Driver
     end
   end
 
+  def delete_access_key(user_name, access_key_ids)
+    log(:info, "Update User `#{user_name}`", :color => :green)
+    access_key_ids.map do |access_key_id|
+      log(:info, "  delete access key `#{access_key_id}`", :color => :green)
+    end
+
+    unless_dry_run do
+      access_key_ids.map do |access_key_id|
+        @iam.delete_access_key({
+          :access_key_id=> access_key_id,
+          :user_name=> user_name
+        })
+      end
+    end
+  end
+
   def add_user_to_groups(user_name, group_names)
     log(:info, "Update User `#{user_name}`", :color => :green)
     log(:info, "  add groups=#{group_names.join(',')}", :color => :green)

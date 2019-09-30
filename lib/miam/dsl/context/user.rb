@@ -16,6 +16,10 @@ class Miam::DSL::Context::User
     @result[:login_profile] = value
   end
 
+  def access_key(value)
+    @result[:access_key] = value
+  end
+
   def groups(*grps)
     @result[:groups].concat(grps.map(&:to_s))
   end

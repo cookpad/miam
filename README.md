@@ -91,6 +91,7 @@ require 'other/iamfile'
 
 user "bob", :path => "/developer/" do
   login_profile :password_reset_required=>true
+  # access_key :access_key_prohibited=>true
 
   groups(
     "Admin"
@@ -113,6 +114,7 @@ end
 
 user "mary", :path => "/staff/" do
   # login_profile :password_reset_required=>true
+  access_key :access_key_prohibited=>false
 
   groups(
     # no group
@@ -192,6 +194,7 @@ end
 ```ruby
 user "bob", :path => "/developer/" do
   login_profile :password_reset_required=>true
+  # access_key :access_key_prohibited=>true
 
   groups(
     "Admin"
@@ -218,6 +221,7 @@ end
 
 user "bob", :path => "/developer/" do
   login_profile :password_reset_required=>true
+  # access_key :access_key_prohibited=>true
 
   groups(
     "Admin"
@@ -285,6 +289,7 @@ end
 
 user "bob", :path => "/developer/" do
   login_profile :password_reset_required=>true
+  # access_key :access_key_prohibited=>true
 
   groups(
     "Admin"
@@ -295,6 +300,7 @@ end
 
 user "mary", :path => "/staff/" do
   # login_profile :password_reset_required=>true
+  access_key :access_key_prohibited=>false
 
   groups(
     # no group

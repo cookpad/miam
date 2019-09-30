@@ -90,8 +90,12 @@ class Miam::Client
         updated = walk_path(:user, user_name, expected_attrs[:path], actual_attrs[:path]) || updated
         updated = walk_user(user_name, expected_attrs, actual_attrs) || updated
       else
+        unless expected_attrs.has_key?(:access_key)
+          expected_attrs[:access_key] = {}
+          expected_attrs[:access_key][:access_key_prohibited] = false
+        end
         actual_attrs = @driver.create_user(user_name, expected_attrs)
-        access_key = @driver.create_access_key(user_name) unless @options[:no_access_key]
+        access_key = @driver.create_access_key(user_name) unless @options[:no_access_key] || expected_attrs[:access_key][:access_key_prohibited]
 
         if access_key
           @password_manager.puts_password(user_name, access_key[:access_key_id], access_key[:secret_access_key])
@@ -119,6 +123,7 @@ class Miam::Client
 
   def walk_user(user_name, expected_attrs, actual_attrs)
     updated = walk_login_profile(user_name, expected_attrs[:login_profile], actual_attrs[:login_profile])
+    updated = walk_access_key(user_name, expected_attrs[:access_key], actual_attrs[:access_key])
     updated = walk_user_groups(user_name, expected_attrs[:groups], actual_attrs[:groups]) || updated
     updated = walk_attached_managed_policies(:user, user_name, expected_attrs[:attached_managed_policies], actual_attrs[:attached_managed_policies]) || updated
     walk_policies(:user, user_name, expected_attrs[:policies], actual_attrs[:policies]) || updated
@@ -149,6 +154,22 @@ class Miam::Client
       end
     end
 
+    updated
+  end
+
+  def walk_access_key(user_name, expected_access_key, actual_access_key)
+    updated = false
+
+    unless expected_access_key
+      expected_access_key = {}
+      expected_access_key[:access_key_prohibited] = false
+    end
+
+    if expected_access_key[:access_key_prohibited] && actual_access_key[:access_key_id].length.positive?
+      @driver.delete_access_key(user_name, actual_access_key[:access_key_id])
+      updated = true
+    end
+    
     updated
   end
 
@@ -572,7 +593,7 @@ class Miam::Client
         second_value.each do |third_key, third_value|
           third_key = third_key.to_sym
 
-          if third_key == :login_profile
+          if third_key == :login_profile || third_key == :access_key
             new_third_value = {}
             third_value.each {|k, v| new_third_value[k.to_sym] = v }
             third_value = new_third_value

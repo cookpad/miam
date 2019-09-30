@@ -34,6 +34,8 @@ class Miam::DSL::Converter
 user #{user_name.inspect}, #{Miam::Utils.unbrace(user_options.inspect)} do
   #{output_login_profile(attrs[:login_profile])}
 
+  #{output_access_key(attrs[:access_key])}
+
   #{output_user_groups(attrs[:groups])}
 
   #{output_policies(attrs[:policies])}
@@ -59,6 +61,14 @@ end
       "login_profile #{Miam::Utils.unbrace(login_profile.inspect)}"
     else
       '# login_profile :password_reset_required=>true'
+    end
+  end
+
+  def output_access_key(access_key)
+    if access_key[:access_key_id].length.positive?
+      'access_key :access_key_prohibited=>false'
+    else
+      '# access_key :access_key_prohibited=>true'
     end
   end
 

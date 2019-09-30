@@ -57,6 +57,7 @@ class Miam::Exporter
       groups = user.group_list
       policies = export_user_policies(user)
       login_profile = export_login_profile(user_name)
+      access_key = export_access_key(user_name)
       attached_managed_policies = user.attached_managed_policies.map(&:policy_arn)
 
       @mutex.synchronize do
@@ -74,6 +75,17 @@ class Miam::Exporter
 
         if login_profile
           result[user_name][:login_profile] = login_profile
+        end
+
+        if access_key.present?
+          result[user_name][:access_key] = {
+            :access_key_id => access_key,
+            :access_key_prohibited => false
+          }
+        else
+          result[user_name][:access_key] = {
+            :access_key_id => [],
+          }
         end
 
         progress
@@ -98,6 +110,17 @@ class Miam::Exporter
     begin
       resp = @iam.get_login_profile(:user_name => user_name)
       {:password_reset_required => resp.login_profile.password_reset_required}
+    rescue Aws::IAM::Errors::NoSuchEntity
+      nil
+    end
+  end
+
+  def export_access_key(user_name)
+    begin
+      resp = @iam.list_access_keys(:user_name => user_name)
+      resp.access_key_metadata.map do |i|
+        i[:access_key_id]
+      end
     rescue Aws::IAM::Errors::NoSuchEntity
       nil
     end
