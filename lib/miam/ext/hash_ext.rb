@@ -15,8 +15,8 @@ class Hash
     when Hash
       new_value = {}
 
-      value.each do |k, v|
-        new_value[k] = sort_array0(v)
+      value.keys.sort.each do |k|
+        new_value[k] = sort_array0(value.fetch(k))
       end
 
       new_value
