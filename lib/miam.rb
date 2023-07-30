@@ -15,7 +15,7 @@ require 'diffy'
 require 'hashie'
 
 module Miam; end
-require 'miam/ext/string_ext'
+require 'miam/string_helper'
 require 'miam/ext/hash_ext'
 require 'miam/logger'
 require 'miam/template_helper'

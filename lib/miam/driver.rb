@@ -107,7 +107,7 @@ class Miam::Driver
     log_attrs.delete(:password)
 
     log(:info, "Update User `#{user_name}`", :color => :green)
-    log(:info, "  login profile:\n".green + Miam::Utils.diff(old_attrs, attrs, :color => @options[:color], :indent => '    '), :color => false)
+    log(:info, Miam::StringHelper.green("  login profile:\n") + Miam::Utils.diff(old_attrs, attrs, :color => @options[:color], :indent => '    '), :color => false)
 
     unless_dry_run do
       @iam.update_login_profile(attrs.merge(:user_name => user_name))
@@ -287,13 +287,13 @@ class Miam::Driver
 
   def update_name(type, user_or_group_name, new_name)
     log(:info, "Update #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}`", :color => :green)
-    log(:info, "  name:\n".green + Miam::Utils.diff(user_or_group_name, new_name, :color => @options[:color], :indent => '    '), :color => false)
+    log(:info, Miam::StringHelper.green("  name:\n") + Miam::Utils.diff(user_or_group_name, new_name, :color => @options[:color], :indent => '    '), :color => false)
     update_user_or_group(type, user_or_group_name, "new_#{type}_name".to_sym => new_name)
   end
 
   def update_path(type, user_or_group_name, new_path, old_path)
     log(:info, "Update #{Miam::Utils.camelize(type.to_s)} `#{user_or_group_name}`", :color => :green)
-    log(:info, "  path:\n".green + Miam::Utils.diff(old_path, new_path, :color => @options[:color], :indent => '    '), :color => false)
+    log(:info, Miam::StringHelper.green("  path:\n") + Miam::Utils.diff(old_path, new_path, :color => @options[:color], :indent => '    '), :color => false)
     update_user_or_group(type, user_or_group_name, :new_path => new_path)
   end
 

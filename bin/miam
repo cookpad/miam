@@ -92,7 +92,7 @@ ARGV.options do |opt|
   end
 end
 
-String.colorize = options[:color]
+Miam::StringHelper.colorize = options[:color]
 
 if options[:debug]
   Aws.config.update(
@@ -181,14 +181,14 @@ begin
 
     updated = client.apply(file)
 
-    logger.info('No change'.intense_blue) unless updated
+    logger.info(Miam::StringHelper.intense_blue('No change')) unless updated
   end
 rescue => e
   if options[:debug]
     raise e
   else
-    $stderr.puts("[ERROR] #{e.message}".red)
-    $stderr.puts(e.backtrace.map(&:yellow)) if options[:show_backtrace]
+    $stderr.puts(Miam::StringHelper.red("[ERROR] #{e.message}"))
+    $stderr.puts(e.backtrace.map { |bt| Miam::StringHelper.yellow(bt) }) if options[:show_backtrace]
     exit 1
   end
 end
