@@ -54,6 +54,7 @@ ARGV.options do |opt|
     opt.on(''  , '--export-concurrency N', Integer) {|v| options[:export_concurrency]   = v                                     }
     opt.on(''  , '--target REGEXP')                 {|v| (options[:target] ||= [])     << Regexp.new(v)                         }
     opt.on(''  , '--exclude REGEXP')                {|v| (options[:exclude] ||= [])    << Regexp.new(v)                         }
+    opt.on(''  , '--exclude-path PATH')             {|v| (options[:exclude_path] ||= [])    << v                                }
     opt.on(''  , '--ignore-login-profile')          {    options[:ignore_login_profile] = true                                  }
     opt.on(''  , '--no-access-key')                 {    options[:no_access_key] = true                                         }
     opt.on(''  , '--no-color')                      {    options[:color]                = false                                 }

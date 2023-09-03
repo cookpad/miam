@@ -4,7 +4,8 @@ class Miam::Client
   def initialize(options = {})
     @options = {
       format: :ruby,
-      exclude: []
+      exclude: [],
+      exclude_path: [],
     }.merge(options)
     aws_config = options.delete(:aws_config) || {}
     @iam = Aws::IAM::Client.new(aws_config)
@@ -82,7 +83,7 @@ class Miam::Client
     updated = scan_rename(:user, expected, actual, group_users)
 
     expected.each do |user_name, expected_attrs|
-      next unless target_matched?(user_name)
+      next unless target_matched?(user_name, expected_attrs)
 
       actual_attrs = actual.delete(user_name)
 
@@ -103,7 +104,7 @@ class Miam::Client
     end
 
     actual.each do |user_name, attrs|
-      next unless target_matched?(user_name)
+      next unless target_matched?(user_name, attrs)
 
       @driver.delete_user(user_name, attrs)
 
@@ -179,7 +180,7 @@ class Miam::Client
     updated = scan_rename(:group, expected, actual, group_users)
 
     expected.each do |group_name, expected_attrs|
-      next unless target_matched?(group_name)
+      next unless target_matched?(group_name, expected_attrs)
 
       actual_attrs = actual.delete(group_name)
 
@@ -194,7 +195,7 @@ class Miam::Client
     end
 
     actual.each do |group_name, attrs|
-      next unless target_matched?(group_name)
+      next unless target_matched?(group_name, attrs)
 
       users_in_group = group_users.delete(group_name) || []
       @driver.delete_group(group_name, attrs, users_in_group)
@@ -218,7 +219,7 @@ class Miam::Client
     updated = false
 
     expected.each do |role_name, expected_attrs|
-      next unless target_matched?(role_name)
+      next unless target_matched?(role_name, expected_attrs)
 
       actual_attrs = actual.delete(role_name)
 
@@ -232,7 +233,7 @@ class Miam::Client
     end
 
     actual.each do |role_name, attrs|
-      next unless target_matched?(role_name)
+      next unless target_matched?(role_name, attrs)
 
       instance_profile_names = []
 
@@ -279,6 +280,7 @@ class Miam::Client
 
   def walk_assume_role_policy(role_name, expected_assume_role_policy, actual_assume_role_policy)
     updated = false
+
     expected_assume_role_policy.sort_array!
     actual_assume_role_policy.sort_array!
 
@@ -333,7 +335,7 @@ class Miam::Client
     updated = false
 
     expected.each do |instance_profile_name, expected_attrs|
-      next unless target_matched?(instance_profile_name)
+      next unless target_matched?(instance_profile_name, expected_attrs)
 
       actual_attrs = actual.delete(instance_profile_name)
 
@@ -347,7 +349,7 @@ class Miam::Client
     end
 
     actual.each do |instance_profile_name, attrs|
-      next unless target_matched?(instance_profile_name)
+      next unless target_matched?(instance_profile_name, attrs)
 
       roles_in_instance_profile = instance_profile_roles.delete(instance_profile_name) || []
       @driver.delete_instance_profile(instance_profile_name, attrs, roles_in_instance_profile)
@@ -478,7 +480,8 @@ class Miam::Client
     updated = false
 
     expected.each do |policy_name, expected_attrs|
-      next unless target_matched?(policy_name)
+      next unless target_matched?(policy_name, expected_attrs)
+
       actual_attrs = actual.delete(policy_name)
 
       if actual_attrs
@@ -513,7 +516,8 @@ class Miam::Client
     updated = false
 
     actual.each do |policy_name, actual_attrs|
-      next unless target_matched?(policy_name)
+      next unless target_matched?(policy_name, actual_attrs)
+
       @driver.delete_managed_policy(policy_name, actual_attrs[:path])
       updated = true
     end
@@ -539,11 +543,15 @@ class Miam::Client
     end
   end
 
-  def target_matched?(name)
+  def target_matched?(name, attrs)
     result = true
 
     if @options[:exclude]
       result &&= @options[:exclude].all? {|r| name !~ r }
+    end
+
+    if @options[:exclude_path]
+      result &&= @options[:exclude_path].select{|v| attrs[:path] == v }.empty? if attrs.key? :path
     end
 
     if @options[:target]
