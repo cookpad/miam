@@ -1,5 +1,7 @@
 # Miam
 
+__Note:__ This software is just transferred from https://github.com/codenize-tools (maintained by [@winebarrel](https://github.com/winebarrel]) which was archived. [Cookpad](https://github.com/cookpad] and [@sorah](https://github.com/sorah) asked @winebarrel for inheriting this project and took its ownership as a new maintainer.
+
 Miam is a tool to manage IAM.
 
 It defines the state of IAM using DSL, and updates IAM according to DSL.
