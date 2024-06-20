@@ -61,7 +61,7 @@ class Miam::Client
 
   def walk(file)
     expected = load_file(file)
-    @options[:exclude] += expected[:exclude]
+    @options[:exclude] += expected[:exclude] unless expected[:exclude].nil?
 
     actual, group_users, instance_profile_roles = Miam::Exporter.export(@iam, @options)
     updated = pre_walk_managed_policies(expected[:policies], actual[:policies])
